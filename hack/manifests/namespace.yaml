@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: erie-canal
+  labels:
+    app.kubernetes.io/name: ErieCanal
+    app.kubernetes.io/instance: ErieCanal
+    flomesh.io/control-plane: "true"
+    flomesh.io/inject: "false"

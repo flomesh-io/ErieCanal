@@ -1,0 +1,12 @@
+apiVersion: flomesh.io/v1alpha1
+kind: NamespacedIngress
+metadata:
+  name: namespaced-ingress-100
+  namespace: test-100
+spec:
+  serviceType: LoadBalancer
+  ports:
+  - name: http
+    port: 100
+    protocol: TCP
+    nodePort: 30100

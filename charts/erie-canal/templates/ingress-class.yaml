@@ -1,0 +1,13 @@
+{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: pipy
+  labels:
+    {{- include "ErieCanal.labels" . | nindent 4 }}
+  annotations:
+    meta.flomesh.io/erie-canal-namespace: {{ include "ErieCanal.namespace" . }}
+    meta.flomesh.io/ingress-pipy-svc: {{ .Values.ErieCanal.ingress.service.name }}
+spec:
+  controller: flomesh.io/ingress-pipy
+{{- end }}

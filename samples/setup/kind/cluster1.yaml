@@ -1,0 +1,13 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: cluster1
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.21.12
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8091
+        protocol: TCP
+networking:
+  apiServerAddress: 10.0.1.21
+  apiServerPort: 6446

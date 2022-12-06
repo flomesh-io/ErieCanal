@@ -1,0 +1,91 @@
+name: trivy-scan
+
+on:
+  push:
+    branches: [ main, release-v* ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ main, release-v* ]
+  schedule:
+    # Daily checking runs at UTC 17:00 (BJT 1:00, next day)
+    - cron: '0 17 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+    name: Build and Scan
+    runs-on: "ubuntu-22.04"
+    strategy:
+      matrix:
+        id: [ "manager", "proxy-init", "ingress-pipy" ]
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.0.0
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Restore Module Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-gomod2-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gomod2-
+
+      - name: Restore Build Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ hashFiles('**/*.go') }}
+
+      - name: Set version
+        run: |
+          cat VERSION >> $GITHUB_ENV
+
+      - name: Package Helm Charts
+        run: make charts-tgz-rel
+
+      - name: Docker meta - ${{ matrix.id }}
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v4.0.1
+        with:
+          images: flomesh/erie-canal-${{ matrix.id }}
+          tags: |
+            type=raw,${{ github.sha }}
+
+      - name: Build and push image ${{ matrix.id }}
+        uses: docker/build-push-action@v3.0.0
+        with:
+          context: .
+          file: ./dockerfiles/${{ matrix.id }}/Dockerfile
+          platforms: linux/amd64
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          build-args: |
+            DISTROLESS_TAG=debug
+          outputs: |
+            type=docker,dest=erie-canal-${{ matrix.id }}.tar
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.6.0
+        with:
+          input: /github/workspace/erie-canal-${{ matrix.id }}.tar
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'

@@ -1,0 +1,121 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: erie-canal-role
+  labels:
+    {{- include "ErieCanal.labels" . | nindent 4 }}
+  creationTimestamp: null
+rules:
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+- apiGroups: ["apps"]
+  resources: ["daemonsets", "deployments", "replicasets", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["list", "get", "watch"]
+
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["list", "get", "watch"]
+
+- apiGroups: [""]
+  resources: ["endpoints", "pods", "services", "secrets", "configmaps", "volumes"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+
+{{- if .Values.ErieCanal.serviceLB.enabled }}
+- apiGroups: [""]
+  resources: ["services/status"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+{{- end }}
+
+- apiGroups: [""]
+  resources: ["services/status"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+{{- if semverCompare ">=1.21-0" .Capabilities.KubeVersion.GitVersion }}
+- apiGroups: ["discovery.k8s.io"]
+  resources: ["endpointslices"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+{{- end }}
+
+{{- if not .Values.ErieCanal.ingress.namespaced }}
+- apiGroups: [ "" ]
+  resources: [ "serviceaccounts" ]
+  verbs: [ "list", "get", "watch" ]
+{{- end }}
+
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["list", "get", "create", "watch", "patch", "update"]
+
+- apiGroups: ["flomesh.io"]
+  resources: ["clusters", "proxyprofiles", "serviceimports", "serviceexports"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+- apiGroups: ["flomesh.io"]
+  resources: ["clusters/finalizers", "proxyprofiles/finalizers", "serviceimports/finalizers", "serviceexports/finalizers"]
+  verbs: ["update"]
+
+- apiGroups: ["flomesh.io"]
+  resources: ["clusters/status", "proxyprofiles/status", "serviceimports/status", "serviceexports/status"]
+  verbs: ["get", "patch", "update"]
+
+- apiGroups: ["gateway.networking.k8s.io"]
+  resources: ["gatewayclasses", "gateways", "httproutes", "referencepolicies", "tcproutes", "tlsroutes", "udproutes"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+- apiGroups: ["gateway.networking.k8s.io"]
+  resources: ["gatewayclasses/finalizers", "gateways/finalizers", "httproutes/finalizers", "referencepolicies/finalizers", "tcproutes/finalizers", "tlsroutes/finalizers", "udproutes/finalizers"]
+  verbs: ["update"]
+
+- apiGroups: ["gateway.networking.k8s.io"]
+  resources: [ "gatewayclasses/status", "gateways/status", "httproutes/status", "referencepolicies/status", "tcproutes/status", "tlsroutes/status", "udproutes/status" ]
+  verbs: ["get", "patch", "update"]
+
+{{- if .Values.certManager.enabled }}
+- apiGroups: ["cert-manager.io"]
+  resources: ["certificaterequests", "certificates", "issuers"]
+  verbs: ["get", "list", "watch", "create", "delete"]
+{{- end }}
+
+{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingressclasses"]
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["list", "get", "watch", "create", "update", "patch", "delete"]
+{{- if .Values.ErieCanal.ingress.namespaced }}
+- apiGroups: ["flomesh.io"]
+  resources: ["namespacedingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+- apiGroups: ["flomesh.io"]
+  resources: ["namespacedingresses/finalizers"]
+  verbs: ["update"]
+
+- apiGroups: ["flomesh.io"]
+  resources: ["namespacedingresses/status"]
+  verbs: ["get", "patch", "update"]
+
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "rolebindings"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+{{- end }}
+{{- end }}

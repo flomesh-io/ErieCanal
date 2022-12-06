@@ -1,0 +1,96 @@
+#
+# Add the following records to /etc/hosts
+# 10.0.2.15 foo.com
+# 10.0.2.15 123.abc.com
+#
+# Test it with below scripts, change the IP if necessary
+# curl http://foo.com:6000/svc
+# curl http://foo.com:6000/proxy
+# curl http://123.abc.com:6000
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipy-sidecar-100
+  labels:
+    app: pipy-sidecar-100
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pipy-003-hello-ip
+  template:
+    metadata:
+      labels:
+        app: pipy-003-hello-ip
+      annotations:
+        flomesh.io/inject: "true"
+    spec:
+      containers:
+      - name: pipy-011
+        image: flomesh/pipy-pjs:latest
+        ports:
+        - containerPort: 6080
+        command: ["/usr/local/bin/pipy", "/etc/pipy/test/003-hello-ip/pipy.js", "--reuse-port"]
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pipy-sidecar-100
+spec:
+  ports:
+  - name: pipy-site
+    port: 6080
+    targetPort: 6080
+  - name: proxy
+    port: 6090
+    targetPort: 6090
+  selector:
+    app: pipy-003-hello-ip
+
+---
+apiVersion: flomesh.io/v1alpha1
+kind: Proxy
+metadata:
+  name: pipy-ingress-100
+spec:
+  mode: Ingress
+  tplMode: Raw
+  image: flomesh/pipy-pjs:latest
+  port: 6000
+  config:
+    config.js: |
+      pipy({
+        _router: new algo.URLRouter({
+            'foo.com/svc/*': 'pipy-sidecar-100.default.svc:6080',
+            'foo.com/proxy/*': 'pipy-sidecar-100.default.svc:6090',
+            '123.abc.com/*': '127.0.0.1:6002',
+        }),
+        _target: undefined,
+      })
+      .listen(6000)
+          .fork('routing')
+          .wait(() => _target !== undefined)
+          .link('404', () => _target === null, 'pass')
+
+      // Find route for host + path
+      .pipeline('routing')
+          .decodeHttpRequest()
+          .onMessageStart(e => _target = _router.find(e.head.headers.host, e.head.path) || null)
+
+      // Pass to upstream
+      .pipeline('pass')
+          .connect(() => _target)
+
+      // Not found
+      .pipeline('404')
+        .decodeHttpRequest()
+        .replaceMessage(new Message({ status: 404 }, 'Not found\n'))
+        .encodeHttpResponse()
+
+      .listen(6002)
+          .decodeHttpRequest()
+          .replaceMessage(new Message('Hello 123\n'))
+          .encodeHttpResponse()
+

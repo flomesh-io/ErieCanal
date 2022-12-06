@@ -1,0 +1,106 @@
+# Global environment variables for builds.
+env:
+  - CGO_ENABLED=0
+  - GO111MODULE=on
+  - GOPROXY=https://goproxy.io|direct
+  - REPO=github.com/flomesh-io/ErieCanal
+
+# Hooks to run before any build is run.
+before:
+  hooks:
+    - go version | grep --quiet "go1\.19" || echo "Go binary version must be 1.19"
+    - go mod download
+
+# Binary builds.
+builds:
+  # erie-canal build steps
+  - id: erie-canal
+    main: ./cli
+    binary: erie-canal
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    asmflags: &build-asmflags
+      - all=-trimpath={{ .Env.PWD }}
+    gcflags: &build-gcflags
+      - all=-trimpath={{ .Env.PWD }}
+    ldflags: &build-ldflags
+      - -X {{ .Env.REPO }}/pkg/version.Version={{ .Env.SIMPLE_VERSION }}
+      - -X {{ .Env.REPO }}/pkg/version.GitVersion={{ .Env.GIT_VERSION }}
+      - -X {{ .Env.REPO }}/pkg/version.GitCommit={{ .Env.GIT_COMMIT }}
+      - -X {{ .Env.REPO }}/pkg/version.KubernetesVersion={{ .Env.K8S_VERSION }}
+      - -X {{ .Env.REPO }}/pkg/version.ImageVersion={{ .Env.APP_VERSION }}
+      - -X {{ .Env.REPO }}/pkg/version.BuildDate={{ .Env.BUILD_DATE }}
+      - -s -w
+    goos:
+      - darwin
+      - windows
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+# Use most recent tag and short commit for snapshot version.
+snapshot:
+  name_template: "{{ .Env.GIT_VERSION }}"
+
+archives:
+  - name_template: "erie-canal_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - none*
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      amd64: x86_64
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+signs:
+  - artifacts: checksum
+    signature: "${artifact}.asc"
+    args: ["--batch", "-u", "{{ .Env.GPG_FINGERPRINT }}", "--output", "${signature}", "--detach-sign", "${artifact}"]
+
+changelog:
+  skip: false
+  use: github
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+    - '^revert:'
+    - '^chore:'
+    - typo
+    - Merge pull request
+    - Merge branch
+    - go mod tidy
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  prerelease: auto
+  extra_files:
+    - glob: ./deploy/ErieCanalyaml
+    - glob: ./etc/cert-manager-v1.7.2.yaml
+  header: |
+    ## {{ tolower .ProjectName }} {{ .Tag }}
+    
+    Welcome to this new release!
+  footer: |
+    ## Thanks!
+    
+    Those were the changes on {{ .Tag }}!
+

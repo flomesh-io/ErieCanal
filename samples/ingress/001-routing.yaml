@@ -1,0 +1,54 @@
+apiVersion: flomesh.io/v1alpha1
+kind: Proxy
+metadata:
+  name: pipy-ingress-001
+spec:
+  mode: Ingress
+  tplMode: Raw
+  image: flomesh/pipy-pjs:latest
+  port: 9090
+  config:
+    config.js: |
+      pipy({
+          _router: new algo.URLRouter({
+              '/hello': 8080,
+              '/hi/*': 8081,
+              'foo.com/bar/*': 8080,
+              '*.foo.com/bar': 8081,
+              '*.foo.org/foo/bar/*': 8080,
+          }),
+          _target: undefined,
+      })
+
+      // HTTP inbound
+      .listen(9090)
+        .fork('routing')
+        .wait(() => _target !== undefined)
+        .link('404', () => _target === null, 'pass')
+
+      // Find route for host + path
+      .pipeline('routing')
+        .decodeHttpRequest()
+        .onMessageStart(e => _target = _router.find(e.head.headers.host, e.head.path) || null)
+
+      // Pass to upstream
+      .pipeline('pass')
+        .connect(() => '127.0.0.1:' + _target)
+
+      // Not found
+      .pipeline('404')
+        .decodeHttpRequest()
+        .replaceMessage(new Message({ status: 404 }, 'Not found\n'))
+        .encodeHttpResponse()
+
+      // Mock service on port 8080
+      .listen(8080)
+        .decodeHttpRequest()
+        .replaceMessage(new Message('Hello from service 8080\n'))
+        .encodeHttpResponse()
+
+      // Mock service on port 8081
+      .listen(8081)
+        .decodeHttpRequest()
+        .replaceMessage(new Message('Hello from service 8081\n'))
+        .encodeHttpResponse()

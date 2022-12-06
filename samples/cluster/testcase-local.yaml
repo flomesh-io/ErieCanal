@@ -1,0 +1,463 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: cluster-local
+---
+apiVersion: v1
+data:
+  config.js: |-
+    pipy()
+      .listen(os.env.INGRESS_TESTCASE_PORT || 6000)
+      .decodeHttpRequest()
+      .replaceMessage(new Message(os.env.INGRESS_TESTCASE_MSG || os.env.HOSTNAME))
+      .encodeHttpResponse()
+kind: ConfigMap
+metadata:
+  name: ingress-testcase-cfg
+  namespace: cluster-local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-001
+  namespace: cluster-local
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: pipy
+  selector:
+    app: service-001
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-002
+  namespace: cluster-local
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: pipy
+  selector:
+    app: service-002
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-003
+  namespace: cluster-local
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: pipy
+  selector:
+    app: service-003
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-004
+  namespace: cluster-local
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: pipy
+  selector:
+    app: service-004
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-005
+  namespace: cluster-local
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: pipy
+  selector:
+    app: service-005
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-006
+  namespace: cluster-local
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: pipy
+  selector:
+    app: service-006
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-007
+  namespace: cluster-local
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: pipy
+  selector:
+    app: service-007
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-001
+  namespace: cluster-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-001
+  template:
+    metadata:
+      labels:
+        app: service-001
+    spec:
+      containers:
+      - args:
+        - -c
+        - /usr/local/bin/pipy /config/config.js 
+        command:
+        - /bin/sh
+        image: flomesh/pipy-pjs:0.4.0-115
+        name: pipy
+        ports:
+        - containerPort: 6000
+          name: pipy
+        volumeMounts:
+        - mountPath: /config
+          name: cfg
+      volumes:
+      - configMap:
+          name: ingress-testcase-cfg
+        name: cfg
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-002
+  namespace: cluster-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-002
+  template:
+    metadata:
+      labels:
+        app: service-002
+    spec:
+      containers:
+      - args:
+        - -c
+        - /usr/local/bin/pipy /config/config.js 
+        command:
+        - /bin/sh
+        image: flomesh/pipy-pjs:0.4.0-115
+        name: pipy
+        ports:
+        - containerPort: 6000
+          name: pipy
+        volumeMounts:
+        - mountPath: /config
+          name: cfg
+      volumes:
+      - configMap:
+          name: ingress-testcase-cfg
+        name: cfg
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-003
+  namespace: cluster-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-003
+  template:
+    metadata:
+      labels:
+        app: service-003
+    spec:
+      containers:
+      - args:
+        - -c
+        - /usr/local/bin/pipy /config/config.js 
+        command:
+        - /bin/sh
+        image: flomesh/pipy-pjs:0.4.0-115
+        name: pipy
+        ports:
+        - containerPort: 6000
+          name: pipy
+        volumeMounts:
+        - mountPath: /config
+          name: cfg
+      volumes:
+      - configMap:
+          name: ingress-testcase-cfg
+        name: cfg
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-004
+  namespace: cluster-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-004
+  template:
+    metadata:
+      labels:
+        app: service-004
+    spec:
+      containers:
+      - args:
+        - -c
+        - /usr/local/bin/pipy /config/config.js 
+        command:
+        - /bin/sh
+        image: flomesh/pipy-pjs:0.4.0-115
+        name: pipy
+        ports:
+        - containerPort: 6000
+          name: pipy
+        volumeMounts:
+        - mountPath: /config
+          name: cfg
+      volumes:
+      - configMap:
+          name: ingress-testcase-cfg
+        name: cfg
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-005
+  namespace: cluster-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-005
+  template:
+    metadata:
+      labels:
+        app: service-005
+    spec:
+      containers:
+      - args:
+        - -c
+        - /usr/local/bin/pipy /config/config.js 
+        command:
+        - /bin/sh
+        image: flomesh/pipy-pjs:0.4.0-115
+        name: pipy
+        ports:
+        - containerPort: 6000
+          name: pipy
+        volumeMounts:
+        - mountPath: /config
+          name: cfg
+      volumes:
+      - configMap:
+          name: ingress-testcase-cfg
+        name: cfg
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-006
+  namespace: cluster-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-006
+  template:
+    metadata:
+      labels:
+        app: service-006
+    spec:
+      containers:
+      - args:
+        - -c
+        - /usr/local/bin/pipy /config/config.js 
+        command:
+        - /bin/sh
+        image: flomesh/pipy-pjs:0.4.0-115
+        name: pipy
+        ports:
+        - containerPort: 6000
+          name: pipy
+        volumeMounts:
+        - mountPath: /config
+          name: cfg
+      volumes:
+      - configMap:
+          name: ingress-testcase-cfg
+        name: cfg
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ingress-pipy-testcase
+  name: service-007
+  namespace: cluster-local
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-007
+  template:
+    metadata:
+      labels:
+        app: service-007
+    spec:
+      containers:
+      - args:
+        - -c
+        - /usr/local/bin/pipy /config/config.js 
+        command:
+        - /bin/sh
+        image: flomesh/pipy-pjs:0.4.0-115
+        name: pipy
+        ports:
+        - containerPort: 6000
+          name: pipy
+        volumeMounts:
+        - mountPath: /config
+          name: cfg
+      volumes:
+      - configMap:
+          name: ingress-testcase-cfg
+        name: cfg
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-v1-v1.19
+  namespace: cluster-local
+spec:
+  ingressClassName: pipy
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: service-001
+            port:
+              number: 80
+        path: /service1
+        pathType: Prefix
+  - host: foo.bar.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: service-002
+            port:
+              number: 80
+        path: /foo
+        pathType: Prefix
+      - backend:
+          service:
+            name: service-003
+            port:
+              number: 80
+        path: /bar
+        pathType: Prefix
+  - host: '*.foo.com'
+    http:
+      paths:
+      - backend:
+          service:
+            name: service-004
+            port:
+              number: 80
+        path: /foo
+        pathType: Prefix
+  - http:
+      paths:
+      - backend:
+          service:
+            name: service-005
+            port:
+              number: 80
+        path: /service5
+        pathType: Prefix
+  - host: foo.bar.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: service-006
+            port:
+              number: 80
+        path: /service6
+        pathType: Prefix
+      - backend:
+          service:
+            name: service-007
+            port:
+              number: 80
+        path: /service7
+        pathType: Prefix
+---
+

@@ -1,0 +1,4 @@
+ErieCanal:
+  ingress:
+    service:
+      type: LoadBalancer

@@ -1,0 +1,7 @@
+apiVersion: flomesh.io/v1alpha1
+kind: GlobalTrafficPolicy
+metadata:
+  namespace: default
+  name: pipy-ok
+spec:
+  lbType: Locality
