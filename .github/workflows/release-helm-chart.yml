@@ -23,7 +23,7 @@ jobs:
           cat VERSION >> $GITHUB_ENV
 
       - name: Publish Helm charts
-        uses: stefanprodan/helm-gh-pages@v1.6.0
+        uses: stefanprodan/helm-gh-pages@v1.7.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           app_version: ${{ env.APP_VERSION }}
