@@ -1,0 +1,10 @@
+apiVersion: flomesh.io/v1alpha1
+kind: ProxyProfile
+metadata:
+  name: default-proxyprofile
+  labels:
+    sidecar.flomesh.io/is-default-proxyprofile: "true"
+spec:
+  mode: Remote
+  sidecars:
+  - name: sidecar

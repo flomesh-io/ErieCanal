@@ -1,0 +1,37 @@
+{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if .Values.ErieCanal.ingress.namespaced }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: erie-canal-namespaced-ingress-role
+  namespace: {{ .Values.nsig.metadata.namespace }}
+  labels:
+    {{- include "ErieCanal.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - "apps"
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+{{- end }}
+{{- end }}

@@ -1,0 +1,30 @@
+name: release-helm-chart
+
+on:
+  push:
+    tags:
+    - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Exclude namespaced-ingress chart
+        run: |
+          rm -rfv charts/namespaced-ingress/
+
+      - name: Set version
+        run: |
+          cat VERSION >> $GITHUB_ENV
+
+      - name: Publish Helm charts
+        uses: stefanprodan/helm-gh-pages@v1.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          app_version: ${{ env.APP_VERSION }}
+          chart_version: ${{ env.HELM_CHART_VERSION }}

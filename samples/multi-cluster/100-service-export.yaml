@@ -1,0 +1,10 @@
+apiVersion: flomesh.io/v1alpha1
+kind: ServiceExport
+metadata:
+  namespace: default
+  name: pipy-ok
+spec:
+  rules:
+    - portNumber: 8080
+      path: "/ok"
+      pathType: Prefix

@@ -1,0 +1,18 @@
+{{- if .Values.ErieCanal.egressGateway.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: erie-canal-egress-gateway
+  namespace: {{ include "ErieCanal.namespace" . }}
+  labels:
+    {{- include "ErieCanal.egress-gateway.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: 1080
+      name: pipy-socks-port
+      targetPort: 1080
+      protocol: TCP
+      appProtocol: tcp
+  selector:
+    {{- include "ErieCanal.egress-gateway.selectorLabels" . | nindent 4 }}
+{{- end }}

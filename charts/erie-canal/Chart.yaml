@@ -1,0 +1,67 @@
+apiVersion: v2
+name: erie-canal
+description: A Helm chart to install the ErieCanal on Kubernetes
+home: https://flomesh.io
+icon: https://flomesh-io.github.io/ErieCanal/flomesh.png
+kubeVersion: ">= 1.19.0-0"
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "0.1.0"
+
+keywords:
+  - kubernetes
+  - helm
+  - service mesh
+  - ingress
+  - gateway api
+  - olm
+  - traffic management
+  - pipy
+  - sidecar
+  - proxy
+
+maintainers:
+  - name: Eric
+    email: reaver@flomesh.io
+
+sources:
+  - https://github.com/flomesh-io/ErieCanal
+  - https://github.com/flomesh-io/pipy
+
+dependencies:
+- name: tpls
+  version: 0.1.0
+  repository: file://../tpls
+- name: cert-manager
+  version: 1.7.3
+  repository: https://charts.jetstack.io
+  condition: certManager.enabled
+
+annotations:
+#  artifacthub.io/containsSecurityUpdates: "true"
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial Import
+  artifacthub.io/links: |
+    - name: source
+      url: https://github.com/flomesh-io/ErieCanal
+    - name: support
+      url: https://github.com/flomesh-io/ErieCanal/issues

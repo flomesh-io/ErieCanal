@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipy-sidecar-207
+  labels:
+    app: pipy-207
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pipy-207
+  template:
+    metadata:
+      labels:
+        app: pipy-207
+        sys: pipy-sidecar-samples
+        tag: consumer
+      annotations:
+        flomesh.io/inject: "true"
+    spec:
+      containers:
+      - name: pipy-207
+        image: flomesh/pipy-pjs:0.4.0-118
+        ports:
+        - containerPort: 6080
+        command: ["/usr/local/bin/pipy", "/etc/pipy/test/003-hello-ip/pipy.js"]

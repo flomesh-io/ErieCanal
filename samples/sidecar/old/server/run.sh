@@ -1,0 +1,1 @@
+npx serve --no-etag
