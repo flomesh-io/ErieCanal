@@ -42,11 +42,11 @@ ErieCanal:
             - arm64
 
   commonEnv:
-    - name: ERIE_CANAL_POD_NAME
+    - name: ERIECANAL_POD_NAME
       valueFrom:
         fieldRef:
           fieldPath: metadata.name
-    - name: ERIE_CANAL_POD_NAMESPACE
+    - name: ERIECANAL_POD_NAMESPACE
       valueFrom:
         fieldRef:
           fieldPath: metadata.namespace
