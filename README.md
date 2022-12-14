@@ -1,4 +1,10 @@
 # ErieCanal
+![GitHub](https://img.shields.io/github/license/flomesh-io/ErieCanal?style=flat-square)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/flomesh-io/ErieCanal?style=flat-square)
+
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/flomesh-io/ErieCanal?include_prereleases&style=flat-square)
+![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/flomesh-io/ErieCanal?include_prereleases&style=flat-square)
+![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/flomesh-io/ErieCanal?style=flat-square)
 
 ErieCanal is a Kubernetes Multi-Cluster Service API (MCS) implementation, and provides MCS, Ingress, Egress, and Gateway API for Kubernetes clusters.
 
