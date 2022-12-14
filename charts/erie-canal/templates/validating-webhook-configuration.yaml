@@ -1,8 +1,0 @@
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: flomesh-validating-webhook-configuration
-  labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
-  creationTimestamp: null
-webhooks: []

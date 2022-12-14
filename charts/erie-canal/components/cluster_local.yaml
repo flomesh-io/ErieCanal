@@ -1,8 +1,0 @@
-apiVersion: flomesh.io/v1alpha1
-kind: Cluster
-metadata:
-  name: local
-  labels:
-    multicluster.flomesh.io/connector-mode: local
-spec:
-  isInCluster: true

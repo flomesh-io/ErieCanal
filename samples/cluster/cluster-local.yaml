@@ -1,6 +1,0 @@
-apiVersion: flomesh.io/v1alpha1
-kind: Cluster
-metadata:
-  name: local
-spec:
-  isInCluster: true

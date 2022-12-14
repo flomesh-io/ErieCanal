@@ -1,9 +1,0 @@
-dependencies:
-- name: tpls
-  repository: file://../tpls
-  version: 0.1.0-alpha.1
-- name: cert-manager
-  repository: https://charts.jetstack.io
-  version: v1.7.3
-digest: sha256:33f61b71111d408566c8a2ba17992a80c3d657aa6db6ec4a1697a1953f9437da
-generated: "2022-12-14T08:30:30.29499+08:00"
