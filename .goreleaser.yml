@@ -93,7 +93,6 @@ changelog:
 release:
   prerelease: auto
   extra_files:
-    - glob: ./deploy/ErieCanalyaml
     - glob: ./etc/cert-manager-v1.7.2.yaml
   header: |
     ## {{ tolower .ProjectName }} {{ .Tag }}
