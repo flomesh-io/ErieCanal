@@ -77,3 +77,5 @@ fabric.properties
 /cli/cmd/chart.tgz
 /dist/
 charts/tpls/
+
+.DS_Store
