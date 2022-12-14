@@ -10,13 +10,13 @@ Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 Once Helm is set up properly, add the repo as follows:
 
 ```console
-helm repo add erie-canal https://flomesh-io.github.io/ErieCanal
+helm repo add ec https://ec.flomesh.io
 ```
 
 Then you're good to install ErieCanal:
 
 ```console
-helm install erie-canal erie-canal/erie-canal --namespace erie-canal --create-namespace
+helm install ec ec/erie-canal --namespace erie-canal --create-namespace
 ```
 
 ## License
