@@ -1,62 +1,62 @@
-{{- if not .Values.ErieCanal.repo.preProvision.enabled }}
+{{- if not .Values.ec.repo.preProvision.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.ErieCanal.repo.name }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  name: {{ .Values.ec.repo.name }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.repo.labels" . | nindent 4 }}
+    {{- include "ec.repo.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.ErieCanal.repo.replicaCount }}
+  replicas: {{ .Values.ec.repo.replicaCount }}
   selector:
     matchLabels:
-      {{- include "ErieCanal.repo.selectorLabels" . | nindent 6 }}
+      {{- include "ec.repo.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "ErieCanal.repo.labels" . | nindent 8 }}
-        {{- include "ErieCanal.repo.selectorLabels" . | nindent 8 }}
+        {{- include "ec.repo.labels" . | nindent 8 }}
+        {{- include "ec.repo.selectorLabels" . | nindent 8 }}
     spec:
       containers:
       - name: repo
-        image: {{ include "ErieCanal.pipy.image" . }}
+        image: {{ include "ec.pipy.image" . }}
         imagePullPolicy: IfNotPresent
         ports:
         - name: repo
-          containerPort: {{ .Values.ErieCanal.services.repo.containerPort }}
+          containerPort: {{ .Values.ec.services.repo.containerPort }}
         command:
         - sh
         - -c
         - |
-          /usr/local/bin/pipy --admin-port={{ .Values.ErieCanal.services.repo.port }}
+          /usr/local/bin/pipy --admin-port={{ .Values.ec.services.repo.port }}
         resources:
-          {{- toYaml .Values.ErieCanal.repo.resources | nindent 10 }}
+          {{- toYaml .Values.ec.repo.resources | nindent 10 }}
         env:
-          {{- include "ErieCanal.common-env" . | nindent 10 }}
+          {{- include "ec.common-env" . | nindent 10 }}
         livenessProbe:
           initialDelaySeconds: 1
           timeoutSeconds: 5
           tcpSocket:
-            port: {{ .Values.ErieCanal.services.repo.port }}
+            port: {{ .Values.ec.services.repo.port }}
         readinessProbe:
           initialDelaySeconds: 1
           timeoutSeconds: 5
           tcpSocket:
-            port: {{ .Values.ErieCanal.services.repo.port }}
+            port: {{ .Values.ec.services.repo.port }}
       priorityClassName: system-node-critical
       terminationGracePeriodSeconds: 30
-      serviceAccountName: {{ include "ErieCanal.serviceAccountName" . }}
-      {{- with .Values.ErieCanal.image.pullSecrets }}
+      serviceAccountName: {{ include "ec.serviceAccountName" . }}
+      {{- with .Values.ec.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.ErieCanal.nodeSelector }}
+      {{- with .Values.ec.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.ErieCanal.affinity.enabled }}
+      {{- if .Values.ec.affinity.enabled }}
       affinity:
-        {{- with .Values.ErieCanal.affinity.nodeAffinity }}
+        {{- with .Values.ec.affinity.nodeAffinity }}
         nodeAffinity:
           {{- toYaml . | nindent 10 }}
         {{- end }}
@@ -68,11 +68,11 @@ spec:
                 - key: flomesh.io/app
                   operator: In
                   values:
-                  - {{ .Values.ErieCanal.repo.name}}
+                  - {{ .Values.ec.repo.name}}
               topologyKey: kubernetes.io/hostname
             weight: 100
       {{- end }}
-      {{- with .Values.ErieCanal.tolerations }}
+      {{- with .Values.ec.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

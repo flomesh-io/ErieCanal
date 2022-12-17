@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.ErieCanal.services.manager.name }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  name: {{ .Values.ec.services.manager.name }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.manager.labels" . | nindent 4 }}
+    {{- include "ec.manager.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.ErieCanal.services.webhook.type }}
+  type: {{ .Values.ec.services.webhook.type }}
   ports:
   - name: health
     port: 8081
     protocol: TCP
     targetPort: 8081
   selector:
-    {{- include "ErieCanal.manager.selectorLabels" . | nindent 4 }}
+    {{- include "ec.manager.selectorLabels" . | nindent 4 }}

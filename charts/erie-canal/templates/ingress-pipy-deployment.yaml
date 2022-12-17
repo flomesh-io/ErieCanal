@@ -1,18 +1,18 @@
-{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if not .Values.ErieCanal.ingress.namespaced }}
+{{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if not .Values.ec.ingress.namespaced }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.ErieCanal.ingress.name }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  name: {{ .Values.ec.ingress.name }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.ingress-pipy.labels" . | nindent 4 }}
+    {{- include "ec.ingress-pipy.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.ErieCanal.ingress.replicaCount }}
+  replicas: {{ .Values.ec.ingress.replicaCount }}
   selector:
     matchLabels:
-      {{- include "ErieCanal.ingress-pipy.selectorLabels" . | nindent 6 }}
-      ingress.flomesh.io/namespaced: {{ .Values.ErieCanal.ingress.namespaced | quote }}
+      {{- include "ec.ingress-pipy.selectorLabels" . | nindent 6 }}
+      ingress.flomesh.io/namespaced: {{ .Values.ec.ingress.namespaced | quote }}
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -21,17 +21,17 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "ErieCanal.ingress-pipy.labels" . | nindent 8 }}
-        {{- include "ErieCanal.ingress-pipy.selectorLabels" . | nindent 8 }}
-        ingress.flomesh.io/namespaced: {{ .Values.ErieCanal.ingress.namespaced | quote }}
+        {{- include "ec.ingress-pipy.labels" . | nindent 8 }}
+        {{- include "ec.ingress-pipy.selectorLabels" . | nindent 8 }}
+        ingress.flomesh.io/namespaced: {{ .Values.ec.ingress.namespaced | quote }}
     spec:
       initContainers:
       - name: wait-manager
-        image: {{ include "ErieCanal.curl.image" . }}
+        image: {{ include "ec.curl.image" . }}
         imagePullPolicy: IfNotPresent
         command:
           - curl
-          - {{ printf "http://%s:8081/healthz" (include "ErieCanal.manager.host" .) }}
+          - {{ printf "http://%s:8081/healthz" (include "ec.manager.host" .) }}
           - --connect-timeout
           - "2"
           - --retry
@@ -41,29 +41,29 @@ spec:
           - "5"
       containers:
       - name: ingress
-        image: {{ include "ErieCanal.ingress-pipy.image" . }}
-        imagePullPolicy: {{ .Values.ErieCanal.image.pullPolicy }}
+        image: {{ include "ec.ingress-pipy.image" . }}
+        imagePullPolicy: {{ .Values.ec.image.pullPolicy }}
         ports:
-        {{- if and .Values.ErieCanal.ingress.http.enabled (and (not (empty .Values.ErieCanal.ingress.http.port)) (not (empty .Values.ErieCanal.ingress.http.containerPort))) }}
+        {{- if and .Values.ec.ingress.http.enabled (and (not (empty .Values.ec.ingress.http.port)) (not (empty .Values.ec.ingress.http.containerPort))) }}
         - name: http
-          containerPort: {{ .Values.ErieCanal.ingress.http.containerPort }}
+          containerPort: {{ .Values.ec.ingress.http.containerPort }}
         {{- end }}
-        {{- if and .Values.ErieCanal.ingress.tls.enabled (and (not (empty .Values.ErieCanal.ingress.tls.port)) (not (empty .Values.ErieCanal.ingress.tls.containerPort))) }}
+        {{- if and .Values.ec.ingress.tls.enabled (and (not (empty .Values.ec.ingress.tls.port)) (not (empty .Values.ec.ingress.tls.containerPort))) }}
         - name: https
-          containerPort: {{ .Values.ErieCanal.ingress.tls.containerPort }}
+          containerPort: {{ .Values.ec.ingress.tls.containerPort }}
         {{- end }}
         - name: health
           containerPort: 8081
         args:
-        - --v={{ .Values.ErieCanal.logLevel }}
+        - --v={{ .Values.ec.logLevel }}
         resources:
-          {{- toYaml .Values.ErieCanal.ingress.resources | nindent 10 }}
+          {{- toYaml .Values.ec.ingress.resources | nindent 10 }}
         env:
-        {{- include "ErieCanal.common-env" . | nindent 8 }}
-        {{- with .Values.ErieCanal.ingress.env }}
+        {{- include "ec.common-env" . | nindent 8 }}
+        {{- with .Values.ec.ingress.env }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- with .Values.ErieCanal.ingress.securityContext }}
+        {{- with .Values.ec.ingress.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
         {{- end }}
@@ -71,25 +71,25 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 5
           tcpSocket:
-            port: {{ .Values.ErieCanal.ingress.http.containerPort }}
+            port: {{ .Values.ec.ingress.http.containerPort }}
         readinessProbe:
           initialDelaySeconds: 5
           timeoutSeconds: 5
           tcpSocket:
-            port: {{ .Values.ErieCanal.ingress.http.containerPort }}
+            port: {{ .Values.ec.ingress.http.containerPort }}
       terminationGracePeriodSeconds: 60
-      serviceAccountName: {{ include "ErieCanal.serviceAccountName" . }}
-      {{- with .Values.ErieCanal.image.pullSecrets }}
+      serviceAccountName: {{ include "ec.serviceAccountName" . }}
+      {{- with .Values.ec.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.ErieCanal.nodeSelector }}
+      {{- with .Values.ec.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.ErieCanal.affinity.enabled }}
+      {{- if .Values.ec.affinity.enabled }}
       affinity:
-        {{- with .Values.ErieCanal.affinity.nodeAffinity }}
+        {{- with .Values.ec.affinity.nodeAffinity }}
         nodeAffinity:
           {{- toYaml . | nindent 10 }}
         {{- end }}
@@ -101,11 +101,11 @@ spec:
                 - key: flomesh.io/app
                   operator: In
                   values:
-                  - {{ .Values.ErieCanal.ingress.name }}
+                  - {{ .Values.ec.ingress.name }}
               topologyKey: kubernetes.io/hostname
             weight: 100
       {{- end }}
-      {{- with .Values.ErieCanal.tolerations }}
+      {{- with .Values.ec.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

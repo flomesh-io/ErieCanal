@@ -137,9 +137,9 @@ func resolveValues(object metav1.Object, mc *config.MeshConfig) (map[string]inte
 	finalValues := nsigValues.AsMap()
 
 	overrides := []string{
-		"ErieCanal.ingress.namespaced=true",
-		fmt.Sprintf("ErieCanal.image.repository=%s", mc.Images.Repository),
-		fmt.Sprintf("ErieCanal.namespace=%s", config.GetErieCanalNamespace()),
+		"ec.ingress.namespaced=true",
+		fmt.Sprintf("ec.image.repository=%s", mc.Images.Repository),
+		fmt.Sprintf("ec.namespace=%s", config.GetErieCanalNamespace()),
 	}
 
 	for _, ov := range overrides {

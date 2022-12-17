@@ -1,12 +1,12 @@
-{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if .Values.ErieCanal.ingress.namespaced }}
+{{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if .Values.ec.ingress.namespaced }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ printf "%s-%s" .Values.ErieCanal.ingress.name .Values.nsig.metadata.namespace }}
+  name: {{ printf "%s-%s" .Values.ec.ingress.name .Values.nsig.metadata.namespace }}
   namespace: {{ .Values.nsig.metadata.namespace }}
   labels:
-    {{- include "ErieCanal.ingress-pipy.labels" . | nindent 4 }}
+    {{- include "ec.ingress-pipy.labels" . | nindent 4 }}
   {{- with .Values.nsig.spec.serviceAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -17,25 +17,25 @@ spec:
   ports:
   {{- if .Values.nsig.spec.http.enabled }}
   - name: http
-    port: {{ default .Values.ErieCanal.ingress.http.port .Values.nsig.spec.http.port.port }}
+    port: {{ default .Values.ec.ingress.http.port .Values.nsig.spec.http.port.port }}
     protocol: {{ default "TCP" .Values.nsig.spec.tls.port.protocol }}
-    targetPort: {{ default .Values.ErieCanal.ingress.http.containerPort .Values.nsig.spec.http.port.targetPort }}
+    targetPort: {{ default .Values.ec.ingress.http.containerPort .Values.nsig.spec.http.port.targetPort }}
     {{- if (and $setNodePorts (not (empty .Values.nsig.spec.http.port.nodePort))) }}
     nodePort: {{ .Values.nsig.spec.http.port.nodePort }}
     {{- end }}
   {{- end }}
   {{- if .Values.nsig.spec.tls.enabled }}
   - name: https
-    port: {{ default .Values.ErieCanal.ingress.tls.port .Values.nsig.spec.tls.port.port }}
+    port: {{ default .Values.ec.ingress.tls.port .Values.nsig.spec.tls.port.port }}
     protocol: {{ default "TCP" .Values.nsig.spec.tls.port.protocol }}
-    targetPort: {{ default .Values.ErieCanal.ingress.tls.containerPort .Values.nsig.spec.tls.port.targetPort }}
+    targetPort: {{ default .Values.ec.ingress.tls.containerPort .Values.nsig.spec.tls.port.targetPort }}
     {{- if (and $setNodePorts (not (empty .Values.nsig.spec.tls.port.nodePort))) }}
     nodePort: {{ .Values.nsig.spec.tls.port.nodePort }}
     {{- end }}
   {{- end }}
   selector:
-    {{- include "ErieCanal.ingress-pipy.selectorLabels" . | nindent 4 }}
-    ingress.flomesh.io/namespaced: {{ .Values.ErieCanal.ingress.namespaced | quote }}
+    {{- include "ec.ingress-pipy.selectorLabels" . | nindent 4 }}
+    ingress.flomesh.io/namespaced: {{ .Values.ec.ingress.namespaced | quote }}
     ingress.flomesh.io/ns: {{ .Values.nsig.metadata.namespace }}
 {{- end }}
 {{- end }}

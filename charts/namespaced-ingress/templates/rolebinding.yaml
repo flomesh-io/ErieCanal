@@ -1,35 +1,35 @@
-{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if .Values.ErieCanal.ingress.namespaced }}
+{{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if .Values.ec.ingress.namespaced }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: erie-canal-namespaced-ingress-rolebinding
   namespace: {{ .Values.nsig.metadata.namespace }}
   labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
+    {{- include "ec.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: erie-canal-namespaced-ingress-role
 subjects:
   - kind: ServiceAccount
-    name: {{ include "ErieCanal.namespaced-ingress.serviceAccountName" . }}
+    name: {{ include "ec.namespaced-ingress.serviceAccountName" . }}
     namespace: {{ .Values.nsig.metadata.namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ printf "erie-canal-mesh-config-rolebinding-%s" .Values.nsig.metadata.namespace }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
+    {{- include "ec.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: erie-canal-mesh-config-role
 subjects:
   - kind: ServiceAccount
-    name: {{ include "ErieCanal.namespaced-ingress.serviceAccountName" . }}
+    name: {{ include "ec.namespaced-ingress.serviceAccountName" . }}
     namespace: {{ .Values.nsig.metadata.namespace }}
 {{- end }}
 {{- end }}

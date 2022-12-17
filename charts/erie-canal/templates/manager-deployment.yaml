@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.ErieCanal.manager.name }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  name: {{ .Values.ec.manager.name }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.manager.labels" . | nindent 4 }}
+    {{- include "ec.manager.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.ErieCanal.manager.replicaCount }}
+  replicas: {{ .Values.ec.manager.replicaCount }}
   selector:
     matchLabels:
-      {{- include "ErieCanal.manager.selectorLabels" . | nindent 6 }}
+      {{- include "ec.manager.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "ErieCanal.manager.labels" . | nindent 8 }}
-        {{- include "ErieCanal.manager.selectorLabels" . | nindent 8 }}
+        {{- include "ec.manager.labels" . | nindent 8 }}
+        {{- include "ec.manager.selectorLabels" . | nindent 8 }}
     spec:
       initContainers:
       - name: init
-        image: {{ include "ErieCanal.toolbox.image" . }}
+        image: {{ include "ec.toolbox.image" . }}
         imagePullPolicy: IfNotPresent
         command:
         - sh
@@ -46,32 +46,32 @@ spec:
           fi
         volumeMounts:
         - mountPath: /scripts.tar.gz
-          name: {{ .Values.ErieCanal.configmaps.repoInit.name }}
+          name: {{ .Values.ec.configmaps.repoInit.name }}
           subPath: scripts.tar.gz
         - mountPath: /crds
-          name: {{ .Values.ErieCanal.configmaps.crds.name }}
+          name: {{ .Values.ec.configmaps.crds.name }}
         - mountPath: /repo
           name: shared-repo
         - mountPath: /manifests
-          name: {{ .Values.ErieCanal.configmaps.manifests.name }}
+          name: {{ .Values.ec.configmaps.manifests.name }}
       containers:
       - name: manager
-        image: {{ include "ErieCanal.manager.image" . }}
-        imagePullPolicy: {{ .Values.ErieCanal.image.pullPolicy }}
+        image: {{ include "ec.manager.image" . }}
+        imagePullPolicy: {{ .Values.ec.image.pullPolicy }}
         ports:
         - name: webhook
-          containerPort: {{ .Values.ErieCanal.services.webhook.containerPort }}
+          containerPort: {{ .Values.ec.services.webhook.containerPort }}
         - name: health
           containerPort: 8081
         command:
         - /manager
         args:
-        - --v={{ .Values.ErieCanal.logLevel }}
-        - --config={{ .Values.ErieCanal.configmaps.manager.filename }}
+        - --v={{ .Values.ec.logLevel }}
+        - --config={{ .Values.ec.configmaps.manager.filename }}
         env:
-          {{- include "ErieCanal.common-env" . | nindent 10 }}
+          {{- include "ec.common-env" . | nindent 10 }}
         resources:
-          {{- toYaml .Values.ErieCanal.manager.resources | nindent 10 }}
+          {{- toYaml .Values.ec.manager.resources | nindent 10 }}
         livenessProbe:
           httpGet:
             path: /healthz
@@ -87,40 +87,40 @@ spec:
         securityContext:
           allowPrivilegeEscalation: false
         volumeMounts:
-        - name: {{ .Values.ErieCanal.configmaps.manager.name }}
-          mountPath: {{ printf "/%s" .Values.ErieCanal.configmaps.manager.filename }}
-          subPath: {{ .Values.ErieCanal.configmaps.manager.filename }}
+        - name: {{ .Values.ec.configmaps.manager.name }}
+          mountPath: {{ printf "/%s" .Values.ec.configmaps.manager.filename }}
+          subPath: {{ .Values.ec.configmaps.manager.filename }}
         - mountPath: /repo
           name: shared-repo
       volumes:
       - configMap:
-          name: {{ .Values.ErieCanal.configmaps.manager.name }}
-        name: {{ .Values.ErieCanal.configmaps.manager.name }}
+          name: {{ .Values.ec.configmaps.manager.name }}
+        name: {{ .Values.ec.configmaps.manager.name }}
       - configMap:
-          name: {{ .Values.ErieCanal.configmaps.repoInit.name }}
-        name: {{ .Values.ErieCanal.configmaps.repoInit.name }}
+          name: {{ .Values.ec.configmaps.repoInit.name }}
+        name: {{ .Values.ec.configmaps.repoInit.name }}
       - configMap:
-          name: {{ .Values.ErieCanal.configmaps.crds.name }}
-        name: {{ .Values.ErieCanal.configmaps.crds.name }}
+          name: {{ .Values.ec.configmaps.crds.name }}
+        name: {{ .Values.ec.configmaps.crds.name }}
       - configMap:
-          name: {{ .Values.ErieCanal.configmaps.manifests.name }}
-        name: {{ .Values.ErieCanal.configmaps.manifests.name }}
+          name: {{ .Values.ec.configmaps.manifests.name }}
+        name: {{ .Values.ec.configmaps.manifests.name }}
       - emptyDir: {}
         name: shared-repo
       priorityClassName: system-node-critical
       terminationGracePeriodSeconds: 30
-      serviceAccountName: {{ include "ErieCanal.serviceAccountName" . }}
-      {{- with .Values.ErieCanal.image.pullSecrets }}
+      serviceAccountName: {{ include "ec.serviceAccountName" . }}
+      {{- with .Values.ec.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.ErieCanal.nodeSelector }}
+      {{- with .Values.ec.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.ErieCanal.affinity.enabled }}
+      {{- if .Values.ec.affinity.enabled }}
       affinity:
-        {{- with .Values.ErieCanal.affinity.nodeAffinity }}
+        {{- with .Values.ec.affinity.nodeAffinity }}
         nodeAffinity:
           {{- toYaml . | nindent 10 }}
         {{- end }}
@@ -132,11 +132,11 @@ spec:
                 - key: flomesh.io/app
                   operator: In
                   values:
-                  - {{ .Values.ErieCanal.manager.name }}
+                  - {{ .Values.ec.manager.name }}
               topologyKey: kubernetes.io/hostname
             weight: 100
       {{- end }}
-      {{- with .Values.ErieCanal.tolerations }}
+      {{- with .Values.ec.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

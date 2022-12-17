@@ -1,11 +1,11 @@
-{{- if .Values.ErieCanal.egressGateway.enabled }}
+{{- if .Values.ec.egressGateway.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: erie-canal-egress-gateway-pjs
-  namespace: {{ include "ErieCanal.namespace" . }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.egress-gateway.labels" . | nindent 4 }}
+    {{- include "ec.egress-gateway.labels" . | nindent 4 }}
 data:
   pipy-sock.js: |
     // version: '2022.09.03'

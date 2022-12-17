@@ -1,13 +1,13 @@
 {{/* Determine ErieCanal namespace */}}
-{{- define "ErieCanal.namespace" -}}
-{{- default .Release.Namespace .Values.ErieCanal.namespace }}
+{{- define "ec.namespace" -}}
+{{- default .Release.Namespace .Values.ec.namespace }}
 {{- end -}}
 
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "ErieCanal.name" -}}
-{{- default .Chart.Name .Values.ErieCanal.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- define "ec.name" -}}
+{{- default .Chart.Name .Values.ec.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -15,11 +15,11 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "ErieCanal.fullname" -}}
-{{- if .Values.ErieCanal.fullnameOverride }}
-{{- .Values.ErieCanal.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- define "ec.fullname" -}}
+{{- if .Values.ec.fullnameOverride }}
+{{- .Values.ec.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default .Chart.Name .Values.ErieCanal.nameOverride }}
+{{- $name := default .Chart.Name .Values.ec.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -31,22 +31,22 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "ErieCanal.chart" -}}
+{{- define "ec.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "ErieCanal.serviceAccountName" -}}
-{{- if .Values.ErieCanal.serviceAccount.create }}
-{{- default .Chart.Name .Values.ErieCanal.serviceAccount.name }}
+{{- define "ec.serviceAccountName" -}}
+{{- if .Values.ec.serviceAccount.create }}
+{{- default .Chart.Name .Values.ec.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.ErieCanal.serviceAccount.name }}
+{{- default "default" .Values.ec.serviceAccount.name }}
 {{- end }}
 {{- end }}
 
 {{/* Determine ErieCanal version */}}
-{{- define "ErieCanal.app-version" -}}
-{{- default .Chart.AppVersion .Values.ErieCanal.version }}
+{{- define "ec.app-version" -}}
+{{- default .Chart.AppVersion .Values.ec.version }}
 {{- end -}}

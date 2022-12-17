@@ -3,6 +3,6 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: flomesh-mutating-webhook-configuration
   labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
+    {{- include "ec.labels" . | nindent 4 }}
   creationTimestamp: null
 webhooks: []

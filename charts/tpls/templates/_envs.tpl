@@ -1,8 +1,8 @@
 {{/* common envs */}}
-{{- define "ErieCanal.common-env" -}}
-{{- with .Values.ErieCanal.commonEnv }}
+{{- define "ec.common-env" -}}
+{{- with .Values.ec.commonEnv }}
 {{- toYaml . }}
 {{- end }}
 - name: ERIECANAL_NAMESPACE
-  value: {{ include "ErieCanal.namespace" . }}
+  value: {{ include "ec.namespace" . }}
 {{- end -}}

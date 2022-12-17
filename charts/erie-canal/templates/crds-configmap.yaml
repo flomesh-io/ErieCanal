@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.ErieCanal.configmaps.crds.name }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  name: {{ .Values.ec.configmaps.crds.name }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
+    {{- include "ec.labels" . | nindent 4 }}
 data:
   flomesh.io_clusters.yaml: |
 {{ (.Files.Get "apis/flomesh.io_clusters.yaml") | indent 4 }}
@@ -12,11 +12,11 @@ data:
 {{ (.Files.Get "apis/flomesh.io_proxyprofiles.yaml") | indent 4 }}
   flomesh.io_mcs-api.yaml: |
 {{ (.Files.Get "apis/flomesh.io_mcs-api.yaml") | indent 4 }}
-  {{- if .Values.ErieCanal.gatewayApi.enabled }}
+  {{- if .Values.ec.gatewayApi.enabled }}
   gateway-api-v0.5.0.yaml: |
 {{ (.Files.Get "apis/gateway-api-v0.5.0.yaml") | indent 4 }}
   {{- end }}
-  {{- if .Values.ErieCanal.ingress.namespaced }}
+  {{- if .Values.ec.ingress.namespaced }}
   flomesh.io_namespacedingresses.yaml: |
 {{ (.Files.Get "apis/flomesh.io_namespacedingresses.yaml") | indent 4 }}
   {{- end }}
