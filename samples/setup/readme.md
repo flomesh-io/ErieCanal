@@ -44,7 +44,7 @@ Not sure what to do next? 😅  Check out https://kind.sigs.k8s.io/docs/user/qui
 
 #### Install ErieCanal to Control Plane
 ```shell
-helm install --namespace flomesh --create-namespace --set ErieCanalversion=0.2.0-alpha.1-dev --set ErieCanallogLevel=5 --set ErieCanalserviceLB.enabled=true erie-canal charts/erie-canal/
+helm install --namespace flomesh --create-namespace --set ErieCanal.version=0.2.0-alpha.1-dev --set ErieCanal.logLevel=5 --set ErieCanal.serviceLB.enabled=true erie-canal charts/erie-canal/
 ```
 
 ### Cluster 1
