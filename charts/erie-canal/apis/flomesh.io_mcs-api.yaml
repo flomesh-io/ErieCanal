@@ -92,6 +92,12 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Valid')].status
+      name: Valid
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Conflict')].status
+      name: Conflict
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
