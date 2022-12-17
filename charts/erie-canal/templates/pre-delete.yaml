@@ -3,7 +3,7 @@ kind: Job
 metadata:
   name: erie-canal-pre-delete
   labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
+    {{- include "ec.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-delete
     "helm.sh/hook-weight": "5"
@@ -13,11 +13,11 @@ spec:
     metadata:
       name: erie-canal-pre-delete
       labels:
-        {{- include "ErieCanal.labels" . | nindent 8 }}
+        {{- include "ec.labels" . | nindent 8 }}
     spec:
       containers:
       - name: uninstall
-        image: {{ include "ErieCanal.toolbox.image" . }}
+        image: {{ include "ec.toolbox.image" . }}
         imagePullPolicy: IfNotPresent
         command:
         - sh
@@ -31,34 +31,34 @@ spec:
           kubectl delete -f /crds/
         volumeMounts:
         - mountPath: /manifests
-          name: {{ .Values.ErieCanal.configmaps.manifests.name }}
+          name: {{ .Values.ec.configmaps.manifests.name }}
         - mountPath: /crds
-          name: {{ .Values.ErieCanal.configmaps.crds.name }}
+          name: {{ .Values.ec.configmaps.crds.name }}
       volumes:
       - configMap:
-          name: {{ .Values.ErieCanal.configmaps.manifests.name }}
-        name: {{ .Values.ErieCanal.configmaps.manifests.name }}
+          name: {{ .Values.ec.configmaps.manifests.name }}
+        name: {{ .Values.ec.configmaps.manifests.name }}
       - configMap:
-          name: {{ .Values.ErieCanal.configmaps.crds.name }}
-        name: {{ .Values.ErieCanal.configmaps.crds.name }}
+          name: {{ .Values.ec.configmaps.crds.name }}
+        name: {{ .Values.ec.configmaps.crds.name }}
       restartPolicy: Never
-      serviceAccountName: {{ include "ErieCanal.serviceAccountName" . }}
-      {{- with .Values.ErieCanal.image.pullSecrets }}
+      serviceAccountName: {{ include "ec.serviceAccountName" . }}
+      {{- with .Values.ec.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.ErieCanal.nodeSelector }}
+      {{- with .Values.ec.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.ErieCanal.affinity.enabled }}
+      {{- if .Values.ec.affinity.enabled }}
       affinity:
-        {{- with .Values.ErieCanal.affinity.nodeAffinity }}
+        {{- with .Values.ec.affinity.nodeAffinity }}
         nodeAffinity:
           {{- toYaml . | nindent 10 }}
         {{- end }}
       {{- end }}
-      {{- with .Values.ErieCanal.tolerations }}
+      {{- with .Values.ec.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

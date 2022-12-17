@@ -49,7 +49,7 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 
 ```bash
 $ helm install ec ec/erie-canal --namespace erie-canal --create-namespace --version=0.1.0-alpha.2 \
-  --set ErieCanal.image.pullPolicy=Always
+  --set ec.image.pullPolicy=Always
 ```
 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,

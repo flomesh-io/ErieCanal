@@ -1,23 +1,23 @@
-{{- if .Values.ErieCanal.egressGateway.enabled }}
+{{- if .Values.ec.egressGateway.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.ErieCanal.egressGateway.name }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  name: {{ .Values.ec.egressGateway.name }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.egress-gateway.labels" . | nindent 4 }}
+    {{- include "ec.egress-gateway.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.ErieCanal.egressGateway.replicaCount }}
+  replicas: {{ .Values.ec.egressGateway.replicaCount }}
   selector:
     matchLabels:
-      {{- include "ErieCanal.egress-gateway.selectorLabels" . | nindent 6 }}
+      {{- include "ec.egress-gateway.selectorLabels" . | nindent 6 }}
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        {{- include "ErieCanal.egress-gateway.labels" . | nindent 8 }}
-        {{- include "ErieCanal.egress-gateway.selectorLabels" . | nindent 8 }}
+        {{- include "ec.egress-gateway.labels" . | nindent 8 }}
+        {{- include "ec.egress-gateway.selectorLabels" . | nindent 8 }}
       annotations:
         prometheus.io/path: '/stats/prometheus'
         prometheus.io/port: '15010'
@@ -25,12 +25,12 @@ spec:
     spec:
       containers:
       - name: pipy
-        image: {{ include "ErieCanal.pipy-repo.image" . }}
-        imagePullPolicy: {{ .Values.ErieCanal.image.pullPolicy }}
+        image: {{ include "ec.pipy-repo.image" . }}
+        imagePullPolicy: {{ .Values.ec.image.pullPolicy }}
         resources:
-          {{- toYaml .Values.ErieCanal.egressGateway.resources | nindent 10 }}
+          {{- toYaml .Values.ec.egressGateway.resources | nindent 10 }}
         volumeMounts:
-          - name: {{ .Values.ErieCanal.configmaps.egress.name }}
+          - name: {{ .Values.ec.configmaps.egress.name }}
             mountPath: "/pipy-sock.js"
             subPath: pipy-sock.js
             readOnly: true
@@ -46,13 +46,13 @@ spec:
           - "--log-level=error"
           - "--admin-port=6060"
         env:
-          {{- include "ErieCanal.common-env" . | nindent 10 }}
+          {{- include "ec.common-env" . | nindent 10 }}
       volumes:
-        - name: {{ .Values.ErieCanal.configmaps.egress.name }}
+        - name: {{ .Values.ec.configmaps.egress.name }}
           configMap:
-            name: {{ .Values.ErieCanal.configmaps.egress.name }}
-      serviceAccountName: {{ include "ErieCanal.serviceAccountName" . }}
-      {{- with .Values.ErieCanal.image.pullSecrets }}
+            name: {{ .Values.ec.configmaps.egress.name }}
+      serviceAccountName: {{ include "ec.serviceAccountName" . }}
+      {{- with .Values.ec.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}

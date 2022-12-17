@@ -3,7 +3,7 @@
   "type": "object",
   "title": "The ErieCanal Helm chart values schema",
   "required": [
-    "ErieCanal",
+    "ec",
     "certManager"
   ],
   "properties": {

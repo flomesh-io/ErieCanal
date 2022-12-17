@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.ErieCanal.configmaps.manager.name }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  name: {{ .Values.ec.configmaps.manager.name }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
+    {{- include "ec.labels" . | nindent 4 }}
 data:
-  {{ .Values.ErieCanal.configmaps.manager.filename }}: |
+  {{ .Values.ec.configmaps.manager.filename }}: |
     apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
     kind: ControllerManagerConfig
     health:
@@ -17,5 +17,5 @@ data:
       port: 9443
     leaderElection:
       leaderElect: true
-      resourceNamespace: {{ include "ErieCanal.namespace" . }}
+      resourceNamespace: {{ include "ec.namespace" . }}
       resourceName: manager.flomesh.io

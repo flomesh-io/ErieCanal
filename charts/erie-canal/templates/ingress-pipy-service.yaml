@@ -1,40 +1,40 @@
-{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if not .Values.ErieCanal.ingress.namespaced }}
+{{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if not .Values.ec.ingress.namespaced }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.ErieCanal.ingress.service.name }}
-  namespace: {{ include "ErieCanal.namespace" . }}
+  name: {{ .Values.ec.ingress.service.name }}
+  namespace: {{ include "ec.namespace" . }}
   labels:
-    {{- include "ErieCanal.ingress-pipy.labels" . | nindent 4 }}
-  {{- with .Values.ErieCanal.ingress.service.annotations }}
+    {{- include "ec.ingress-pipy.labels" . | nindent 4 }}
+  {{- with .Values.ec.ingress.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ .Values.ErieCanal.ingress.service.type }}
-  {{- $setNodePorts := (or (eq .Values.ErieCanal.ingress.service.type "NodePort") (eq .Values.ErieCanal.ingress.service.type "LoadBalancer")) }}
+  type: {{ .Values.ec.ingress.service.type }}
+  {{- $setNodePorts := (or (eq .Values.ec.ingress.service.type "NodePort") (eq .Values.ec.ingress.service.type "LoadBalancer")) }}
   ports:
-  {{- if and .Values.ErieCanal.ingress.http.enabled (and (not (empty .Values.ErieCanal.ingress.http.port)) (not (empty .Values.ErieCanal.ingress.http.containerPort))) }}
+  {{- if and .Values.ec.ingress.http.enabled (and (not (empty .Values.ec.ingress.http.port)) (not (empty .Values.ec.ingress.http.containerPort))) }}
   - name: http
-    port: {{ .Values.ErieCanal.ingress.http.port }}
+    port: {{ .Values.ec.ingress.http.port }}
     protocol: TCP
-    targetPort: {{ .Values.ErieCanal.ingress.http.containerPort }}
-    {{- if (and $setNodePorts (not (empty .Values.ErieCanal.ingress.http.nodePort))) }}
-    nodePort: {{ .Values.ErieCanal.ingress.http.nodePort }}
+    targetPort: {{ .Values.ec.ingress.http.containerPort }}
+    {{- if (and $setNodePorts (not (empty .Values.ec.ingress.http.nodePort))) }}
+    nodePort: {{ .Values.ec.ingress.http.nodePort }}
     {{- end }}
   {{- end }}
-  {{- if and .Values.ErieCanal.ingress.tls.enabled (and (not (empty .Values.ErieCanal.ingress.tls.port)) (not (empty .Values.ErieCanal.ingress.tls.containerPort))) }}
+  {{- if and .Values.ec.ingress.tls.enabled (and (not (empty .Values.ec.ingress.tls.port)) (not (empty .Values.ec.ingress.tls.containerPort))) }}
   - name: https
-    port: {{ .Values.ErieCanal.ingress.tls.port }}
+    port: {{ .Values.ec.ingress.tls.port }}
     protocol: TCP
-    targetPort: {{ .Values.ErieCanal.ingress.tls.containerPort }}
-    {{- if (and $setNodePorts (not (empty .Values.ErieCanal.ingress.tls.nodePort))) }}
-    nodePort: {{ .Values.ErieCanal.ingress.tls.nodePort }}
+    targetPort: {{ .Values.ec.ingress.tls.containerPort }}
+    {{- if (and $setNodePorts (not (empty .Values.ec.ingress.tls.nodePort))) }}
+    nodePort: {{ .Values.ec.ingress.tls.nodePort }}
     {{- end }}
   {{- end }}
   selector:
-    {{- include "ErieCanal.ingress-pipy.selectorLabels" . | nindent 4 }}
-    ingress.flomesh.io/namespaced: {{ .Values.ErieCanal.ingress.namespaced | quote }}
+    {{- include "ec.ingress-pipy.selectorLabels" . | nindent 4 }}
+    ingress.flomesh.io/namespaced: {{ .Values.ec.ingress.namespaced | quote }}
 {{- end }}
 {{- end }}

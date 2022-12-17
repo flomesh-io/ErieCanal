@@ -1,12 +1,12 @@
-{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if .Values.ErieCanal.ingress.namespaced }}
+{{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if .Values.ec.ingress.namespaced }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: erie-canal-namespaced-ingress-role
   namespace: {{ .Values.nsig.metadata.namespace }}
   labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
+    {{- include "ec.labels" . | nindent 4 }}
 rules:
   - apiGroups:
       - ""

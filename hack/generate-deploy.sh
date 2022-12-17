@@ -35,12 +35,12 @@ do
   cd ${TARGET_DIR}
   helm template erie-canal ${DIR}/charts/erie-canal \
     --values values.yaml \
-    --namespace flomesh \
+    --namespace erie-canal \
     --no-hooks \
     --kube-version ${K8S_VERSION} \
-    --set ErieCanal.version=${ERIE_CANAL_IMAGE_TAG:-latest} \
-    --set ErieCanal.logLevel=${ERIE_CANAL_LOG_LEVEL:-2} \
-    --set ErieCanal.image.pullPolicy=${ERIE_CANAL_IMAGE_PULL_POLICY:-IfNotPresent} \
+    --set ec.version=${ERIE_CANAL_IMAGE_TAG:-latest} \
+    --set ec.logLevel=${ERIE_CANAL_LOG_LEVEL:-2} \
+    --set ec.image.pullPolicy=${ERIE_CANAL_IMAGE_PULL_POLICY:-IfNotPresent} \
     > $MANIFEST
   kustomize --load-restrictor=LoadRestrictionsNone build . > ${OUTPUT_DIR}/${ERIE_CANAL_DEPLOY_YAML}
   rm $MANIFEST

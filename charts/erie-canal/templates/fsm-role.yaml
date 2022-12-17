@@ -3,7 +3,7 @@ kind: ClusterRole
 metadata:
   name: erie-canal-role
   labels:
-    {{- include "ErieCanal.labels" . | nindent 4 }}
+    {{- include "ec.labels" . | nindent 4 }}
   creationTimestamp: null
 rules:
 - apiGroups: ["admissionregistration.k8s.io"]
@@ -30,7 +30,7 @@ rules:
   resources: ["endpoints", "pods", "services", "secrets", "configmaps", "volumes"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
 
-{{- if .Values.ErieCanal.serviceLB.enabled }}
+{{- if .Values.ec.serviceLB.enabled }}
 - apiGroups: [""]
   resources: ["services/status"]
   verbs: ["get", "list", "watch", "create", "update", "patch"]
@@ -50,7 +50,7 @@ rules:
   verbs: ["get", "list", "watch", "update", "patch"]
 {{- end }}
 
-{{- if not .Values.ErieCanal.ingress.namespaced }}
+{{- if not .Values.ec.ingress.namespaced }}
 - apiGroups: [ "" ]
   resources: [ "serviceaccounts" ]
   verbs: [ "list", "get", "watch" ]
@@ -90,14 +90,14 @@ rules:
   verbs: ["get", "list", "watch", "create", "delete"]
 {{- end }}
 
-{{- if and .Values.ErieCanal.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
 - apiGroups: ["networking.k8s.io"]
   resources: ["ingressclasses"]
   verbs: ["list", "get", "watch"]
 - apiGroups: ["networking.k8s.io"]
   resources: ["ingresses"]
   verbs: ["list", "get", "watch", "create", "update", "patch", "delete"]
-{{- if .Values.ErieCanal.ingress.namespaced }}
+{{- if .Values.ec.ingress.namespaced }}
 - apiGroups: ["flomesh.io"]
   resources: ["namespacedingresses"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
