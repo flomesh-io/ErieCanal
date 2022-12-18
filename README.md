@@ -12,6 +12,10 @@ ErieCanal is an implementation of [Kubernetes Multi-Cluster Service API (MCS)](h
 
 In the `Locality` mode, which is the default configuration, traffic is scheduled based on proximity within the local cluster or can be scheduled to a specific cluster based on topology.In the `ActiveActive` mode, the cluster provides the same traffic processing capabilities as service export (`ServiceExport`) using load balancing. In the `Failover` mode, the importing service (ServiceImport) cluster provides disaster recovery capabilities for the exporting service (ServiceExport) cluster. ErieCanal's implementation does not require the underlying Kubernetes to use a special network and does not require a unified two-layer or three-layer network between the multi-cluster networks. Therefore, it is generally applicable to Kubernetes clusters of various types of networks.
 
+## Architecture
+
+![ErieCanal Architecture diagram](architecture.png)
+
 ## Install
 
 This chart bootstraps a ErieCanal deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
