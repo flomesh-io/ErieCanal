@@ -95,7 +95,7 @@ release:
   extra_files:
     - glob: ./etc/cert-manager-v1.7.2.yaml
   header: |
-    ## {{ tolower .ProjectName }} {{ .Tag }}
+    ## {{ .ProjectName }} {{ .Tag }}
     
     Welcome to this new release!
   footer: |
