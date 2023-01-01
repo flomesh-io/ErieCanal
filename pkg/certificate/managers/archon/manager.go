@@ -87,7 +87,8 @@ func NewRootCA(cn string, validityPeriod time.Duration,
 
 func NewManager(ca *certificate.Certificate) (*ArchonManager, error) {
 	return &ArchonManager{
-		ca: ca,
+		ca:           ca,
+		certificates: map[string]*certificate.Certificate{},
 	}, nil
 }
 
@@ -148,18 +149,31 @@ func (m *ArchonManager) IssueCertificate(cn string, validityPeriod time.Duration
 		return nil, err
 	}
 
-	return &certificate.Certificate{
+	issuedCert := &certificate.Certificate{
 		CommonName:   cn,
 		SerialNumber: serialNumber.String(),
 		CA:           m.ca.CrtPEM,
 		CrtPEM:       pemTlsCert,
 		KeyPEM:       pemTlsKey,
 		Expiration:   cert.NotAfter,
-	}, nil
+	}
+
+	m.certificates[cn] = issuedCert
+
+	return issuedCert, nil
 }
 
 func (m *ArchonManager) GetCertificate(cn string) (*certificate.Certificate, error) {
-	panic("Not implemented yet")
+	if cn == "" {
+		return nil, fmt.Errorf("CN is empty")
+	}
+
+	cert, ok := m.certificates[cn]
+	if !ok {
+		return nil, fmt.Errorf("no certificate found for CN %q", cn)
+	}
+
+	return cert, nil
 }
 
 func (m *ArchonManager) GetRootCertificate() (*certificate.Certificate, error) {

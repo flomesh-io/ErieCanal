@@ -43,8 +43,16 @@ spec:
           timeoutSeconds: 5
           tcpSocket:
             port: {{ .Values.ec.services.repo.port }}
+        {{- with .Values.ec.repo.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
       priorityClassName: system-node-critical
       terminationGracePeriodSeconds: 30
+      {{- with .Values.ec.repo.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "ec.serviceAccountName" . }}
       {{- with .Values.ec.image.pullSecrets }}
       imagePullSecrets:

@@ -32,15 +32,16 @@ import (
 	"k8s.io/klog/v2"
 )
 
-func NewConfig(k8sApi *kube.K8sAPI, managerType certificate.CertificateManagerType) *Config {
+func NewConfig(k8sApi *kube.K8sAPI, mc *config.MeshConfig) *Config {
 	return &Config{
-		k8sApi:      k8sApi,
-		managerType: managerType,
+		k8sApi: k8sApi,
+		mc:     mc,
+		//managerType: managerType,
 	}
 }
 
 func (c *Config) GetCertificateManager() (certificate.Manager, error) {
-	switch c.managerType {
+	switch certificate.CertificateManagerType(c.mc.Certificate.Manager) {
 	case certificate.Manual:
 		return c.getManualCertificateManager()
 	case certificate.Archon:
@@ -48,7 +49,7 @@ func (c *Config) GetCertificateManager() (certificate.Manager, error) {
 	case certificate.CertManager:
 		return c.getCertManagerCertificateManager()
 	default:
-		return nil, fmt.Errorf("%q is not a valid certificate manager", c.managerType)
+		return nil, fmt.Errorf("%q is not a valid certificate manager", c.mc.Certificate.Manager)
 	}
 }
 
@@ -58,10 +59,10 @@ func (c *Config) getArchonCertificateManager() (certificate.Manager, error) {
 		commons.DefaultCACountry, commons.DefaultCALocality, commons.DefaultCAOrganization,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate root CA, manager type = %q, %s", c.managerType, err.Error())
+		return nil, fmt.Errorf("failed to generate root CA, manager type = %q, %s", c.mc.Certificate.Manager, err.Error())
 	}
 
-	rootCert, err = c.getOrSaveCertificate(config.GetErieCanalNamespace(), commons.DefaultCABundleName, rootCert)
+	rootCert, err = c.getOrSaveCertificate(c.mc.GetCaBundleNamespace(), c.mc.GetCaBundleName(), rootCert)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get/create CA, %s", err.Error())
 	}
@@ -70,7 +71,7 @@ func (c *Config) getArchonCertificateManager() (certificate.Manager, error) {
 }
 
 func (c *Config) getCertManagerCertificateManager() (certificate.Manager, error) {
-	client := certmanager.NewClient(c.k8sApi)
+	client := certmanager.NewClient(c.k8sApi, c.mc)
 
 	rootCert, err := certmanager.NewRootCA(
 		client,
@@ -78,7 +79,7 @@ func (c *Config) getCertManagerCertificateManager() (certificate.Manager, error)
 		commons.DefaultCACountry, commons.DefaultCALocality, commons.DefaultCAOrganization,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create/get root CA, manager type = %q, %s", c.managerType, err.Error())
+		return nil, fmt.Errorf("failed to create/get root CA, manager type = %q, %s", c.mc.Certificate.Manager, err.Error())
 	}
 
 	return certmanager.NewManager(rootCert, client)

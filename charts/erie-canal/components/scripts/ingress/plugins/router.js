@@ -13,97 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-(config =>
-
-  pipy({
-    _router:
+((
+    config = pipy.solve('ingress.js'),
+    router = new algo.URLRouter(
       Object.fromEntries(
         Object.entries(config.routes).map(
-          ([k, v]) => [
-            k,
-            {
-              ...v,
-              rewrite: v.rewrite ? [
-                new RegExp(v.rewrite[0]),
-                v.rewrite[1],
-              ] : undefined,
-              matches: v.matches?.length > 0 ? (
-                v.matches.map(
-                  ({ type, reg }) => (
-                    {
-                      "type": type,
-                      "reg": new RegExp(reg)
-                    }
-                  )
-                )
-              ) : null
-            }
+          ([k, { service, rewrite }]) => [
+            k, { service, rewrite: rewrite && [new RegExp(rewrite[0]), rewrite[1]] }
           ]
         )
-      ),
+      )
+    ),
 
-    _route: null,
-  })
+  ) => pipy()
 
-  .export('router', {
-      __service: '',
-      __ingressID: '',
-      __projectID: '',
-      __apiID: '',
-      __requestServiceCount: new stats.Counter(
-        'req_service_cnt',
-        ['serviceid']
-      ),
-      __requestIngressCount: new stats.Counter(
-        'req_ingress_cnt',
-        ['ingressid']
-      ),
-      __requestProjectCount: new stats.Counter(
-        'req_project_cnt',
-        ['projectid']
-      ),
+    .import({
+      __route: 'main',
     })
 
-  .pipeline('request')
-    .handleMessageStart(
-      msg => (
-        _route = new algo.URLRouter(_router).find(
-          msg.head.headers.host,
-          msg.head.path,
-        ),
-        _route || (
-          Object.entries(_router).map(
-            ([k, v]) => (
-              k.split('/')[0].length > 0 ? (msg.head.headers.host ? k.split('/')[0] === msg.head.headers.host : msg.head.headers.host) :
-                v.matches && (_route = v.matches.find(
-                  match => (
-                    match.type == 'header' && msg.head.headers[match.name] && match.reg.test(msg.head.headers[match.name]) // TODO: check other match types
-                    || match.type == 'path' && msg.head.path && match.reg.test(msg.head.path)
-                    || match.type == 'method' && msg.head.method && match.reg.test(msg.head.method)
-                  )
-                ) ? v : _route)
+    .pipeline()
+      .handleMessageStart(
+        msg => (
+          ((
+            r = router.find(
+              msg.head.headers.host,
+              msg.head.path,
             )
-          )
-        ),
-        _route && (
-          __service = _route.service,
-          __ingressID = _route.ingressId,
-          __projectID = _route.projectId,
-          __apiID = _route.serviceId,
-          __requestServiceCount.withLabels(__service).increase(),
-          __requestIngressCount.withLabels(__ingressID).increase(),
-          __requestProjectCount.withLabels(__projectID).increase(),
-          _route.rewrite && (
-            msg.head.path = msg.head.path.replace(
-              _route.rewrite[0],
-              _route.rewrite[1],
-            )
-          )
-        ),
-        console.log('Request Host: ', msg.head.headers['host']),
-        console.log('Request Path: ', msg.head.path)
+          ) => (
+            __route = r?.service,
+            r?.rewrite && (
+              msg.head.path = msg.head.path.replace(r.rewrite[0], r.rewrite[1])
+            ),
+            console.log('[router] Request Host: ', msg.head.headers['host']),
+            console.log('[router] Request Path: ', msg.head.path)
+          ))()
+        )
       )
-    )
+      .chain()
 
-)(JSON.decode(pipy.load('config/router.json')))
+)()

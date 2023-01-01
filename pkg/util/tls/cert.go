@@ -25,7 +25,7 @@ import (
 )
 
 func GetCertificateManager(k8sApi *kube.K8sAPI, mc *config.MeshConfig) (certificate.Manager, error) {
-	certCfg := certificateconfig.NewConfig(k8sApi, certificate.CertificateManagerType(mc.Certificate.Manager))
+	certCfg := certificateconfig.NewConfig(k8sApi, mc)
 	mgr, err := certCfg.GetCertificateManager()
 	if err != nil {
 		klog.Errorf("get certificate manager, %s", err.Error())

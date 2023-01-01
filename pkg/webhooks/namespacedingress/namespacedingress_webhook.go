@@ -25,6 +25,7 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/pkg/errors"
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
@@ -110,16 +111,33 @@ func (w *NamespacedIngressDefaulter) SetDefaults(obj interface{}) {
 		c.Spec.ServiceAccountName = "erie-canal-namespaced-ingress"
 	}
 
-	if c.Spec.LogLevel == 0 {
-		c.Spec.LogLevel = 2
+	if c.Spec.LogLevel == nil {
+		c.Spec.LogLevel = pointer.Int(2)
 	}
 
 	if c.Spec.Replicas == nil {
 		c.Spec.Replicas = pointer.Int32(1)
 	}
 
-	if c.Spec.TLS.SSLPassthrough.UpstreamPort == 0 {
-		c.Spec.TLS.SSLPassthrough.UpstreamPort = 443
+	if c.Spec.TLS.SSLPassthrough.UpstreamPort == nil {
+		c.Spec.TLS.SSLPassthrough.UpstreamPort = pointer.Int32(443)
+	}
+
+	if c.Spec.PodSecurityContext == nil {
+		c.Spec.PodSecurityContext = &corev1.PodSecurityContext{
+			RunAsNonRoot: pointer.Bool(true),
+			RunAsUser:    pointer.Int64(65532),
+			RunAsGroup:   pointer.Int64(65532),
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
+			},
+		}
+	}
+
+	if c.Spec.SecurityContext == nil {
+		c.Spec.SecurityContext = &corev1.SecurityContext{
+			AllowPrivilegeEscalation: pointer.Bool(false),
+		}
 	}
 
 	klog.V(4).Infof("After setting default values, spec=%#v", c.Spec)

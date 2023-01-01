@@ -28,8 +28,14 @@ data:
       "ingress": {
         "enabled": {{ .Values.ec.ingress.enabled }},
         "namespaced": {{ .Values.ec.ingress.namespaced }},
+        "http": {
+          "enabled": {{ .Values.ec.ingress.http.enabled }},
+          "listen": {{ .Values.ec.ingress.http.containerPort }}
+        },
         "tls": {
           "enabled": {{ .Values.ec.ingress.tls.enabled }},
+          "listen": {{ .Values.ec.ingress.tls.containerPort }},
+          "mTLS": {{ .Values.ec.ingress.tls.mTLS }},
           "sslPassthrough": {
             "enabled": {{ .Values.ec.ingress.tls.sslPassthrough.enabled }},
             "upstreamPort": {{ .Values.ec.ingress.tls.sslPassthrough.upstreamPort }}
@@ -43,17 +49,21 @@ data:
 
       "certificate": {
         {{- if .Values.certManager.enabled }}
-        "manager": "cert-manager"
+        "manager": "cert-manager",
         {{- else }}
-        "manager": "archon"
+        "manager": "archon",
         {{- end }}
+        "caBundleName": "{{ .Values.certManager.caBundleName }}",
+        "caBundleNamespace": ""
       },
 
       "cluster": {
+        "uid": "",
         "region": "default",
         "zone": "default",
         "group": "default",
-        "name": "local"
+        "name": "local",
+        "controlPlaneUID": ""
       },
 
       "serviceLB": {

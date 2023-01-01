@@ -7,7 +7,7 @@
     "certManager"
   ],
   "properties": {
-    "ErieCanal": {
+    "ec": {
       "title": "The ErieCanal schema",
       "description": "The top level required key in the values file.",
       "required": [
@@ -770,6 +770,75 @@
               "type": "boolean",
               "default": false,
               "title": "The enabled Schema"
+            }
+          }
+        },
+        "egressGateway": {
+          "type": "object",
+          "default": {},
+          "title": "The manager Schema",
+          "required": [
+            "enabled",
+            "name",
+            "replicaCount",
+            "resources",
+            "podLabels",
+            "podAnnotations",
+            "port",
+            "adminPort",
+            "mode",
+            "logLevel"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "title": "The enabled Schema"
+            },
+            "name": {
+              "type": "string",
+              "default": "fsm-manager",
+              "title": "The name Schema"
+            },
+            "replicaCount": {
+              "type": "integer",
+              "default": 1,
+              "title": "The replicaCount Schema"
+            },
+            "resources": {
+              "type": "object",
+              "default": {},
+              "title": "The resources Schema"
+            },
+            "podLabels": {
+              "type": "object",
+              "default": {},
+              "title": "The podLabels Schema"
+            },
+            "podAnnotations": {
+              "type": "object",
+              "default": {},
+              "title": "The podAnnotations Schema"
+            },
+            "port": {
+              "type": "integer",
+              "default": 1080,
+              "title": "The port Schema"
+            },
+            "adminPort": {
+              "type": "integer",
+              "default": 6060,
+              "title": "The admin port Schema"
+            },
+            "mode": {
+              "type": "string",
+              "default": "http2tunnel",
+              "title": "The forward mode"
+            },
+            "logLevel": {
+              "type": "string",
+              "default": "error",
+              "title": "The logLevel Schema"
             }
           }
         },

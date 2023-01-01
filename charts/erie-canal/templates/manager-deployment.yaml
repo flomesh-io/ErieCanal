@@ -20,6 +20,10 @@ spec:
       - name: init
         image: {{ include "ec.toolbox.image" . }}
         imagePullPolicy: IfNotPresent
+        {{- with .Values.ec.manager.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command:
         - sh
         - -c
@@ -84,8 +88,10 @@ spec:
             port: 8081
           initialDelaySeconds: 1
           timeoutSeconds: 5
+        {{- with .Values.ec.manager.securityContext }}
         securityContext:
-          allowPrivilegeEscalation: false
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         volumeMounts:
         - name: {{ .Values.ec.configmaps.manager.name }}
           mountPath: {{ printf "/%s" .Values.ec.configmaps.manager.filename }}
@@ -109,6 +115,10 @@ spec:
         name: shared-repo
       priorityClassName: system-node-critical
       terminationGracePeriodSeconds: 30
+      {{- with .Values.ec.manager.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "ec.serviceAccountName" . }}
       {{- with .Values.ec.image.pullSecrets }}
       imagePullSecrets:

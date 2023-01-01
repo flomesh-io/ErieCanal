@@ -24,5 +24,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM gcr.io/distroless/static-debian11:$DISTROLESS_TAG
 WORKDIR /
 COPY --from=builder /workspace/bin/proxy-init .
+USER 65532:65532
 
 ENTRYPOINT ["/proxy-init"]

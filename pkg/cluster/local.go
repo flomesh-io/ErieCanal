@@ -50,13 +50,13 @@ func (c *LocalConnector) Run(stopCh <-chan struct{}) error {
 	go controllers.IngressClassv1.Run(stopCh)
 	go controllers.Ingressv1.Run(stopCh)
 	go controllers.ServiceImport.Run(stopCh)
-	//go controllers.ConfigMap.Run(stopCh)
+	go controllers.Secret.Run(stopCh)
 
 	// start the informers manually
 	klog.V(3).Infof("Starting informers(svc, ep & ingress class) ......")
 	go controllers.Service.Informer.Run(stopCh)
 	go controllers.Endpoints.Informer.Run(stopCh)
-	//go controllers.ConfigMap.Informer.Run(stopCh)
+	go controllers.Secret.Informer.Run(stopCh)
 	go controllers.IngressClassv1.Informer.Run(stopCh)
 
 	klog.V(3).Infof("Waiting for caches to be synced ......")
@@ -64,9 +64,9 @@ func (c *LocalConnector) Run(stopCh <-chan struct{}) error {
 	if !k8scache.WaitForCacheSync(stopCh,
 		controllers.Endpoints.HasSynced,
 		controllers.Service.HasSynced,
-		//controllers.ConfigMap.HasSynced,
+		controllers.Secret.HasSynced,
 	) {
-		runtime.HandleError(fmt.Errorf("timed out waiting for services & endpoints caches to sync"))
+		runtime.HandleError(fmt.Errorf("timed out waiting for services, endpoints & secrets caches to sync"))
 	}
 
 	// Ingress also depends on IngressClass, but it'c not needed to have relation with svc & ep

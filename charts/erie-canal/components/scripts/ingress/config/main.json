@@ -1,13 +1,24 @@
 {
-  "listen": 8000,
-  "listenTLS": 8443,
+  "http": {
+    "enabled": true,
+    "listen": 8000
+  },
+
+  "tls": {
+    "enabled": false,
+    "listen": 8443,
+    "mTLS": false,
+    "certificate": {}
+  },
+
   "sslPassthrough": {
     "enabled": false,
     "upstreamPort": 443
   },
+
   "plugins": [
+    "plugins/reject-http.js",
     "plugins/router.js",
-    "plugins/logger.js",
     "plugins/balancer.js",
     "plugins/default.js"
   ]

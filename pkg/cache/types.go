@@ -20,7 +20,7 @@ import (
 	"fmt"
 	gwcontrollerv1alpha2 "github.com/flomesh-io/ErieCanal/pkg/controller/gateway/v1alpha2"
 	gwcontrollerv1beta1 "github.com/flomesh-io/ErieCanal/pkg/controller/gateway/v1beta1"
-	"github.com/flomesh-io/ErieCanal/pkg/repo"
+	"github.com/flomesh-io/ErieCanal/pkg/route"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -34,7 +34,16 @@ type Route interface {
 	Backend() ServicePortName
 	Rewrite() []string
 	SessionSticky() bool
-	LBType() repo.AlgoBalancer
+	LBType() route.AlgoBalancer
+	UpstreamSSLName() string
+	UpstreamSSLCert() *route.CertificateSpec
+	UpstreamSSLVerify() bool
+	Certificate() *route.CertificateSpec
+	IsTLS() bool
+	IsWildcardHost() bool
+	VerifyClient() bool
+	VerifyDepth() int
+	TrustedCA() *route.CertificateSpec
 }
 
 type ServicePortName struct {
@@ -59,8 +68,6 @@ type ServicePort interface {
 	Address() string
 	Port() int
 	Protocol() v1.Protocol
-	//Export() bool
-	//ExportName() string
 }
 
 type Endpoint interface {

@@ -1,0 +1,9 @@
+fsm:
+  logLevel: 5
+  image:
+    pullPolicy: Always
+  ingress:
+    tls:
+      enabled: true
+  pipy:
+    imageName: pipy-repo

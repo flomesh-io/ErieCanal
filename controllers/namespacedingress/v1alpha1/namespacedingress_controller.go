@@ -26,7 +26,6 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/helm"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/flomesh-io/ErieCanal/pkg/repo"
-	"github.com/flomesh-io/ErieCanal/pkg/util/tls"
 	ghodssyaml "github.com/ghodss/yaml"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/strvals"
@@ -170,18 +169,18 @@ func (r *NamespacedIngressReconciler) updateConfig(nsig *nsigv1alpha1.Namespaced
 
 		if nsig.Spec.TLS.SSLPassthrough.Enabled {
 			// SSL passthrough
-			err := tls.UpdateSSLPassthrough(
+			err := config.UpdateSSLPassthrough(
 				basepath,
 				repoClient,
 				nsig.Spec.TLS.SSLPassthrough.Enabled,
-				nsig.Spec.TLS.SSLPassthrough.UpstreamPort,
+				*nsig.Spec.TLS.SSLPassthrough.UpstreamPort,
 			)
 			if err != nil {
 				return ctrl.Result{RequeueAfter: 1 * time.Second}, err
 			}
 		} else {
 			// TLS offload
-			err := tls.IssueCertForIngress(basepath, repoClient, r.CertMgr, mc)
+			err := config.IssueCertForIngress(basepath, repoClient, r.CertMgr, mc)
 			if err != nil {
 				return ctrl.Result{RequeueAfter: 1 * time.Second}, err
 			}

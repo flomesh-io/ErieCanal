@@ -29,6 +29,10 @@ spec:
       - name: wait-manager
         image: {{ include "ec.curl.image" . }}
         imagePullPolicy: IfNotPresent
+        {{- with .Values.ec.ingress.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command:
           - curl
           - {{ printf "http://%s:8081/healthz" (include "ec.manager.host" .) }}
@@ -78,6 +82,10 @@ spec:
           tcpSocket:
             port: {{ .Values.ec.ingress.http.containerPort }}
       terminationGracePeriodSeconds: 60
+      {{- with .Values.ec.ingress.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "ec.serviceAccountName" . }}
       {{- with .Values.ec.image.pullSecrets }}
       imagePullSecrets:

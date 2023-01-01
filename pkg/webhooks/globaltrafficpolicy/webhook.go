@@ -157,7 +157,7 @@ func (w *GlobalTrafficPolicyValidator) doValidation(obj interface{}) error {
 		//}
 
 		for _, t := range policy.Spec.Targets {
-			if t.Weight < 0 {
+			if *t.Weight < 0 {
 				return fmt.Errorf("weight %d of %s is invalid for active-active load balancing, it must be >= 0", t.Weight, t.ClusterKey)
 			}
 		}
