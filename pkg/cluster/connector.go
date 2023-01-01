@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/flomesh-io/ErieCanal/pkg/cache"
+	"github.com/flomesh-io/ErieCanal/pkg/certificate"
 	conn "github.com/flomesh-io/ErieCanal/pkg/cluster/context"
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
@@ -32,7 +33,7 @@ import (
 	"time"
 )
 
-func NewConnector(ctx context.Context, broker *event.Broker, resyncPeriod time.Duration) (Connector, error) {
+func NewConnector(ctx context.Context, broker *event.Broker, certMgr certificate.Manager, resyncPeriod time.Duration) (Connector, error) {
 	connectorCtx := ctx.(*conn.ConnectorContext)
 
 	k8sAPI, err := kube.NewAPIForConfig(connectorCtx.KubeConfig, 30*time.Second)
@@ -63,7 +64,7 @@ func NewConnector(ctx context.Context, broker *event.Broker, resyncPeriod time.D
 	}
 
 	clusterCfg := config.NewStore(k8sAPI)
-	connectorCache := cache.NewCache(connectorCtx, k8sAPI, clusterCfg, broker, resyncPeriod)
+	connectorCache := cache.NewCache(connectorCtx, k8sAPI, clusterCfg, broker, certMgr, resyncPeriod)
 
 	if connectorCtx.ConnectorConfig.IsInCluster() {
 		return &LocalConnector{

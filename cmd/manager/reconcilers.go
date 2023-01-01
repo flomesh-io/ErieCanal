@@ -34,7 +34,7 @@ import (
 )
 
 func registerReconcilers(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConfigStore *config.Store, certMgr certificate.Manager, broker *event.Broker) {
-	registerCluster(mgr, api, controlPlaneConfigStore, broker)
+	registerCluster(mgr, api, controlPlaneConfigStore, broker, certMgr)
 	registerServiceExport(mgr, api, controlPlaneConfigStore, broker)
 	registerServiceImport(mgr, api, controlPlaneConfigStore)
 
@@ -52,7 +52,7 @@ func registerReconcilers(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConf
 	}
 }
 
-func registerCluster(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConfigStore *config.Store, broker *event.Broker) {
+func registerCluster(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConfigStore *config.Store, broker *event.Broker, certMgr certificate.Manager) {
 	if err := (clusterv1alpha1.New(
 		mgr.GetClient(),
 		api,
@@ -60,6 +60,7 @@ func registerCluster(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConfigSt
 		mgr.GetEventRecorderFor("Cluster"),
 		controlPlaneConfigStore,
 		broker,
+		certMgr,
 		util.RegisterOSExitHandlers(),
 	)).SetupWithManager(mgr); err != nil {
 		klog.Fatal(err, "unable to create controller", "controller", "Cluster")

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	clusterv1alpha1 "github.com/flomesh-io/ErieCanal/apis/cluster/v1alpha1"
 	svcexpv1alpha1 "github.com/flomesh-io/ErieCanal/apis/serviceexport/v1alpha1"
+	"github.com/flomesh-io/ErieCanal/pkg/certificate"
 	conn "github.com/flomesh-io/ErieCanal/pkg/cluster"
 	cctx "github.com/flomesh-io/ErieCanal/pkg/cluster/context"
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
@@ -58,6 +59,7 @@ type ClusterReconciler struct {
 	recorder    record.EventRecorder
 	configStore *config.Store
 	broker      *event.Broker
+	certMgr     certificate.Manager
 	backgrounds map[string]*connectorBackground
 	mu          sync.Mutex
 }
@@ -75,6 +77,7 @@ func New(
 	recorder record.EventRecorder,
 	store *config.Store,
 	broker *event.Broker,
+	certMgr certificate.Manager,
 	stop <-chan struct{},
 ) *ClusterReconciler {
 	r := &ClusterReconciler{
@@ -84,6 +87,7 @@ func New(
 		recorder:    recorder,
 		configStore: store,
 		broker:      broker,
+		certMgr:     certMgr,
 		backgrounds: make(map[string]*connectorBackground),
 	}
 
@@ -220,7 +224,7 @@ func (r *ClusterReconciler) newConnector(ctx context.Context, cluster *clusterv1
 	background.Cancel = cancel
 	background.StopCh = stop
 
-	connector, err := conn.NewConnector(&background, r.broker, 15*time.Minute)
+	connector, err := conn.NewConnector(&background, r.broker, r.certMgr, 15*time.Minute)
 	if err != nil {
 		klog.Errorf("Failed to create connector for cluster %q: %s", cluster.Key(), err)
 		return ctrl.Result{}, err

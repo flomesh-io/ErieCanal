@@ -54,3 +54,10 @@ Service Full Name - manager
 {{- define "ec.manager.host" -}}
 {{- printf "%s.%s.svc" .Values.ec.services.manager.name (include "ec.namespace" .) -}}
 {{- end }}
+
+{{/*
+Service Full Name - ingress-pipy
+*/}}
+{{- define "ec.ingress-pipy.host" -}}
+{{- printf "%s.%s.svc" .Values.ec.ingress.service.name (include "ec.namespace" .) -}}
+{{- end }}

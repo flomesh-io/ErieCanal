@@ -24,7 +24,6 @@ import (
 const (
 	// Global constants
 
-	DefaultCABundleName           = "flomesh-ca-bundle"
 	RootCACertName                = "ca.crt"
 	RootCAPrivateKeyName          = "ca.key"
 	TLSCertName                   = "tls.crt"

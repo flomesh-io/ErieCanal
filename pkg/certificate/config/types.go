@@ -17,11 +17,12 @@
 package config
 
 import (
-	"github.com/flomesh-io/ErieCanal/pkg/certificate"
+	"github.com/flomesh-io/ErieCanal/pkg/config"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 )
 
 type Config struct {
-	k8sApi      *kube.K8sAPI
-	managerType certificate.CertificateManagerType
+	k8sApi *kube.K8sAPI
+	mc     *config.MeshConfig
+	//managerType certificate.CertificateManagerType
 }

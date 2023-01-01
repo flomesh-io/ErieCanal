@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-(config =>
-
 pipy()
-
-.pipeline('request')
+  .pipeline()
   .replaceMessage(
-    new Message(config.head, config.body)
+    new Message({
+      "status": 404,
+      "headers": {
+        "Server": "pipy/0.70.0"
+      }
+    }, 'Service Not Found')
   )
-
-)(JSON.decode(pipy.load("config/default.json")))

@@ -104,6 +104,9 @@ func main() {
 	repoClient := repo.NewRepoClient(mc.RepoRootURL())
 	initRepo(repoClient)
 
+	// setup HTTP
+	setupHTTP(repoClient, mc)
+
 	// setup TLS config
 	setupTLS(certMgr, repoClient, mc)
 

@@ -24,7 +24,7 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/config"
 	cachectrl "github.com/flomesh-io/ErieCanal/pkg/controller"
 	"github.com/flomesh-io/ErieCanal/pkg/event"
-	eriecanalinformers "github.com/flomesh-io/ErieCanal/pkg/generated/informers/externalversions"
+	ecinformers "github.com/flomesh-io/ErieCanal/pkg/generated/informers/externalversions"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/events"
@@ -71,9 +71,9 @@ func newRemoteCache(ctx context.Context, api *kube.K8sAPI, clusterCfg *config.St
 		broker:          broker,
 	}
 
-	erieCanalInformerFactory := eriecanalinformers.NewSharedInformerFactoryWithOptions(api.FlomeshClient, resyncPeriod)
+	ecInformerFactory := ecinformers.NewSharedInformerFactoryWithOptions(api.FlomeshClient, resyncPeriod)
 	serviceExportController := cachectrl.NewServiceExportControllerWithEventHandler(
-		erieCanalInformerFactory.Serviceexport().V1alpha1().ServiceExports(),
+		ecInformerFactory.Serviceexport().V1alpha1().ServiceExports(),
 		resyncPeriod,
 		c,
 	)

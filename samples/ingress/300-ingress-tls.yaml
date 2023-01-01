@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipy-ok
+  labels:
+    app: pipy-ok
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pipy-ok
+  template:
+    metadata:
+      labels:
+        app: pipy-ok
+    spec:
+      containers:
+        - name: pipy-ok
+          image: flomesh/pipy:0.70.0-46
+          ports:
+            - name: pipy
+              containerPort: 8080
+          command:
+            - pipy
+            - -e
+            - |
+              pipy()
+              .listen(8080)
+              .serveHTTP(new Message('Hi, there!'))
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pipy-ok
+spec:
+  ports:
+    - name: pipy
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: pipy-ok
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pipy-ok
+spec:
+  ingressClassName: pipy
+
+  rules:
+    - host: abc.com
+      http:
+        paths:
+          - path: /ok
+            pathType: Prefix
+            backend:
+              service:
+                name: pipy-ok
+                port:
+                  number: 8080
+  tls:
+  - hosts:
+    - abc.com
+    secretName: test-secret

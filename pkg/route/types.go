@@ -16,44 +16,71 @@
 
 package route
 
-import (
-	"github.com/flomesh-io/ErieCanal/pkg/repo"
-	"net"
-)
+//type RouteBase struct {
+//	// Region,
+//	Region string `json:"region"`
+//	// Zone,
+//	Zone string `json:"zone"`
+//	// Group,
+//	Group string `json:"group"`
+//	// Cluster,
+//	Cluster string `json:"cluster"`
+//
+//	GatewayHost string `json:"gatewayHost"`
+//	GatewayIP   net.IP `json:"gatewayIP"`
+//	GatewayPort int32  `json:"gatewayPort"`
+//}
 
-type RouteBase struct {
-	// Region,
-	Region string `json:"region"`
-	// Zone,
-	Zone string `json:"zone"`
-	// Group,
-	Group string `json:"group"`
-	// Cluster,
-	Cluster string `json:"cluster"`
-
-	GatewayHost string `json:"gatewayHost"`
-	GatewayIP   net.IP `json:"gatewayIP"`
-	GatewayPort int32  `json:"gatewayPort"`
-}
-type IngressRoute struct {
-	RouteBase `json:",inline"`
+type IngressData struct {
+	//RouteBase `json:",inline"`
 	// Hash
 	Hash string `json:"hash" hash:"ignore"`
 	// Routes
-	Routes []IngressRouteEntry `json:"routes" hash:"set"`
+	Routes []IngressRouteSpec `json:"routes" hash:"set"`
 }
 
-type IngressRouteEntry struct {
-	Host        string            `json:"host,omitempty"`
-	Path        string            `json:"path,omitempty"`
-	ServiceName string            `json:"serviceName,omitempty"`
-	Rewrite     []string          `json:"rewrite,omitempty"`
-	Sticky      bool              `json:"sticky,omitempty"`
-	Balancer    repo.AlgoBalancer `json:"balancer,omitempty"`
-	Upstreams   []EndpointEntry   `json:"upstreams,omitempty" hash:"set"`
+type IngressRouteSpec struct {
+	RouterSpec   `json:",inline"`
+	BalancerSpec `json:",inline"`
+	TLSSpec      `json:",inline"`
 }
 
-type EndpointEntry struct {
+type RouterSpec struct {
+	Host    string   `json:"-"`
+	Path    string   `json:"-"`
+	Service string   `json:"service,omitempty"`
+	Rewrite []string `json:"rewrite,omitempty"`
+}
+
+type BalancerSpec struct {
+	Sticky   bool          `json:"sticky,omitempty"`
+	Balancer AlgoBalancer  `json:"balancer,omitempty"`
+	Upstream *UpstreamSpec `json:"upstream,omitempty"`
+}
+
+type UpstreamSpec struct {
+	SSLName   string             `json:"sslName,omitempty"`
+	SSLCert   *CertificateSpec   `json:"sslCert,omitempty"`
+	SSLVerify bool               `json:"sslVerify,omitempty"`
+	Endpoints []UpstreamEndpoint `json:"endpoints,omitempty" hash:"set"`
+}
+
+type TLSSpec struct {
+	IsTLS          bool             `json:"isTLS,omitempty"`
+	IsWildcardHost bool             `json:"isWildcardHost,omitempty"`
+	VerifyClient   bool             `json:"verifyClient,omitempty"`
+	VerifyDepth    int              `json:"verifyDepth,omitempty"`
+	Certificate    *CertificateSpec `json:"certificate,omitempty"`
+	TrustedCA      *CertificateSpec `json:"trustedCA,omitempty"`
+}
+
+type CertificateSpec struct {
+	Cert string `json:"cert"`
+	Key  string `json:"key"`
+	CA   string `json:"ca,omitempty"`
+}
+
+type UpstreamEndpoint struct {
 	// IP is the entry's IP.  The IP address protocol corresponds to the HashFamily of IPSet.
 	// All entries' IP addresses in the same ip set has same the protocol, IPv4 or IPv6.
 	IP string `json:"ip,omitempty"`
@@ -65,7 +92,7 @@ type EndpointEntry struct {
 }
 
 type ServiceRoute struct {
-	RouteBase `json:",inline"`
+	//RouteBase `json:",inline"`
 	// Hash
 	Hash   string              `json:"hash" hash:"ignore"`
 	Routes []ServiceRouteEntry `json:"routes" hash:"set"`
@@ -80,12 +107,6 @@ type ServiceRouteEntry struct {
 	Targets []Target `json:"targets" hash:"set"`
 	// PortName
 	PortName string `json:"portName,omitempty"`
-	//// ExternalPath, it's for out-cluster access, combined with address, can be empty if it's not exposed by ingress
-	//ExternalPath string `json:"externalPath,omitempty"`
-	//// Export
-	//Export bool `json:"export,omitempty"`
-	//// ExportName
-	//ExportName string `json:"exportName,omitempty"`
 }
 
 type Target struct {
@@ -94,3 +115,30 @@ type Target struct {
 	// Tag, reserved placeholder for futher features
 	Tags map[string]string `json:"tags,omitempty" hash:"set"`
 }
+
+type IngressConfig struct {
+	TrustedCAs     []string `json:"trustedCAs"`
+	TLSConfig      `json:",inline"`
+	RouterConfig   `json:",inline"`
+	BalancerConfig `json:",inline"`
+}
+
+type TLSConfig struct {
+	Certificates map[string]TLSSpec `json:"certificates"`
+}
+
+type RouterConfig struct {
+	Routes map[string]RouterSpec `json:"routes"`
+}
+
+type BalancerConfig struct {
+	Services map[string]BalancerSpec `json:"services"`
+}
+
+type AlgoBalancer string
+
+const (
+	RoundRobinLoadBalancer AlgoBalancer = "round-robin"
+	HashingLoadBalancer    AlgoBalancer = "hashing"
+	LeastWorkLoadBalancer  AlgoBalancer = "least-work"
+)

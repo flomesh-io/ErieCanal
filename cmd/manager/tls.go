@@ -21,7 +21,6 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
 	"github.com/flomesh-io/ErieCanal/pkg/repo"
-	"github.com/flomesh-io/ErieCanal/pkg/util/tls"
 	"k8s.io/klog/v2"
 	"os"
 )
@@ -31,19 +30,17 @@ func setupTLS(certMgr certificate.Manager, repoClient *repo.PipyRepoClient, mc *
 	if mc.Ingress.TLS.Enabled {
 		if mc.Ingress.TLS.SSLPassthrough.Enabled {
 			// SSL Passthrough
-			err := tls.UpdateSSLPassthrough(
+			if err := config.UpdateSSLPassthrough(
 				commons.DefaultIngressBasePath,
 				repoClient,
 				mc.Ingress.TLS.SSLPassthrough.Enabled,
 				mc.Ingress.TLS.SSLPassthrough.UpstreamPort,
-			)
-			if err != nil {
+			); err != nil {
 				os.Exit(1)
 			}
 		} else {
 			// TLS Offload
-			err := tls.IssueCertForIngress(commons.DefaultIngressBasePath, repoClient, certMgr, mc)
-			if err != nil {
+			if err := config.IssueCertForIngress(commons.DefaultIngressBasePath, repoClient, certMgr, mc); err != nil {
 				os.Exit(1)
 			}
 		}

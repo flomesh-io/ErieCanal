@@ -6,11 +6,13 @@ metadata:
   namespace: {{ include "ec.namespace" . }}
   labels:
     {{- include "ec.egress-gateway.labels" . | nindent 4 }}
+  annotations:
+    {{- include "ec.egress-gateway.annotations" . | nindent 4 }}
 spec:
   ports:
-    - port: 1080
-      name: pipy-socks-port
-      targetPort: 1080
+    - port: {{ .Values.ec.egressGateway.port }}
+      name: egress-nat-port
+      targetPort: {{ .Values.ec.egressGateway.port }}
       protocol: TCP
       appProtocol: tcp
   selector:

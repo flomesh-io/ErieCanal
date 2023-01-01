@@ -14,36 +14,74 @@
  * limitations under the License.
  */
 
-(config =>
+(({
+    config,
+    certificates,
+    issuingCAs
+  } = pipy.solve('config.js'),
+
+  ) =>
 
   pipy({
     _passthroughTarget: undefined,
   })
-
   .export('main', {
-      __turnDown: false,
-      __isTLS: false,
-    })
+    __route: undefined,
+    __isTLS: false,
+  })
 
-  .listen(config.listen)
-    .link('tls-offloaded')
+  .listen(
+    config?.http?.enabled
+      ? (config?.http?.listen ? config.http.listen : 8000)
+      : 0
+  ).link('inbound-http')
 
-  .listen(config.listenTLS)
-    .link(
-      'passthrough', () => config.sslPassthrough.enabled === true,
-      'offload'
+  .listen(
+    config?.tls?.enabled
+      ? (config?.tls?.listen ? config.tls.listen : 8443)
+      : 0
+  ).link(
+    'passthrough', () => config?.sslPassthrough?.enabled === true,
+    'inbound-tls'
+  )
+
+  .pipeline('inbound-tls')
+    .onStart(
+      () => (
+        (() => (
+          void(__isTLS = true)
+        ))()
+      )
     )
-
-  .pipeline('offload')
-    .handleStreamStart(
-      () => __isTLS = true
-    )
-    .acceptTLS('tls-offloaded', {
-      certificate: config.listenTLS && config.certificates && config.certificates.cert && config.certificates.key ? {
-        cert: new crypto.CertificateChain(config.certificates.cert),
-        key: new crypto.PrivateKey(config.certificates.key),
-      } : undefined,
-    })
+    .acceptTLS({
+      certificate: (sni, cert) => (
+        console.log('SNI', sni),
+        (sni && (
+          Object.entries(certificates).find(
+            ([k, v]) => (
+              v?.isWildcardHost ? false : (k === sni)
+            )?.[1]
+          )
+          ||
+          Object.entries(certificates).find(
+            ([k, v]) => (
+              v?.isWildcardHost ? (Boolean(v?.regex) ? v.regex.test(sni) : k === sni) : false
+            )?.[1]
+          )
+        )) || (
+          config?.tls?.certificate && config?.tls?.certificate?.cert && config?.tls?.certificate?.key
+            ? {
+              cert: new crypto.Certificate(config.tls.certificate.cert),
+              key: new crypto.PrivateKey(config.tls.certificate.key),
+            }
+            : undefined
+        )
+      ),
+      trusted: Boolean(config?.tls?.mTLS) ? issuingCAs : undefined,
+      verify: (ok, cert) => (
+        ok
+      )
+    }).to('inbound-http')
 
   .pipeline('passthrough')
     .handleTLSClientHello(
@@ -52,24 +90,16 @@
       )
     )
     .branch(
-      () => (_passthroughTarget !== ''), (
+      () => Boolean(_passthroughTarget), (
         $=>$.connect(() => `${_passthroughTarget}:${config.sslPassthrough.upstreamPort}`)
       ),
-      () => (_passthroughTarget === ''), (
+      (
         $=>$.replaceStreamStart(new StreamEnd)
       )
     )
 
-  .pipeline('tls-offloaded')
-    .use(config.plugins, 'session')
-    .demuxHTTP('request')
-
-  .pipeline('request')
-    .use(
-      config.plugins,
-      'request',
-      'response',
-      () => __turnDown
+  .pipeline('inbound-http')
+    .demuxHTTP().to(
+      $=>$.chain(config.plugins)
     )
-
-)(JSON.decode(pipy.load('config/main.json')))
+)()

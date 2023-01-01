@@ -6,6 +6,7 @@ metadata:
   namespace: {{ include "ec.namespace" . }}
   labels:
     {{- include "ec.egress-gateway.labels" . | nindent 4 }}
+    {{- include "ec.egress-gateway.selectorLabels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.ec.egressGateway.replicaCount }}
   selector:
@@ -31,20 +32,20 @@ spec:
           {{- toYaml .Values.ec.egressGateway.resources | nindent 10 }}
         volumeMounts:
           - name: {{ .Values.ec.configmaps.egress.name }}
-            mountPath: "/pipy-sock.js"
-            subPath: pipy-sock.js
+            mountPath: "/repo/egress-gateway.js"
+            subPath: egress-gateway.js
             readOnly: true
         ports:
-          - name: "pipy-socks-port"
-            containerPort: 1080
+          - name: "egress-nat-port"
+            containerPort: {{ .Values.ec.egressGateway.port }}
           - name: "pipy-admin-port"
-            containerPort: 6060
+            containerPort: {{ .Values.ec.egressGateway.adminPort }}
         command:
           - pipy
         args:
-          - "/pipy-sock.js"
-          - "--log-level=error"
-          - "--admin-port=6060"
+          - "/repo/egress-gateway.js"
+          - "--log-level={{ .Values.ec.egressGateway.logLevel }}"
+          - "--admin-port={{ .Values.ec.egressGateway.adminPort }}"
         env:
           {{- include "ec.common-env" . | nindent 10 }}
       volumes:

@@ -40,6 +40,7 @@ func NewFlomeshConfigurationHandler(client client.Client, k8sApi *kube.K8sAPI, s
 		configStore: store,
 		listeners: &configChangeListener{
 			meshConfig: []MeshConfigChangeListener{
+				&meshCfgChangeListenerForBasicConfig{client: client, k8sApi: k8sApi, configStore: store},
 				&meshCfgChangeListenerForIngress{k8sApi: k8sApi, configStore: store},
 			},
 			//clusterConfig: []ClusterConfigChangeListener{},

@@ -17,7 +17,7 @@
 package v1alpha1
 
 import (
-	"github.com/flomesh-io/ErieCanal/pkg/repo"
+	"github.com/flomesh-io/ErieCanal/pkg/route"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -66,7 +66,7 @@ type ServiceExportSpec struct {
 	// +kubebuilder:validation:Enum=RoundRobinLoadBalancer;HashingLoadBalancer;LeastWorkLoadBalancer
 	// +optional
 	// The LoadBalancer Type applied to the Ingress Rules those created by the ServiceExport
-	LoadBalancer repo.AlgoBalancer `json:"loadBalancer,omitempty"`
+	LoadBalancer route.AlgoBalancer `json:"loadBalancer,omitempty"`
 
 	// +kubebuilder:validation:MinItems=1
 	// The paths for accessing the service via Ingress controller

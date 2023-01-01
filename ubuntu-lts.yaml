@@ -1,0 +1,104 @@
+# ===================================================================== #
+# BASIC CONFIGURATION
+# ===================================================================== #
+
+# Arch: "default", "x86_64", "aarch64".
+# "default" corresponds to the host architecture.
+arch: "default"
+
+# An image must support systemd and cloud-init.
+# Ubuntu and Fedora are known to work.
+# Image is set to focal (20.04 LTS) for long-term stability
+# Default: none (must be specified)
+images:
+  # Try to use a local image first.
+  - location: "~/Downloads/ubuntu-22.04-server-cloudimg-amd64.img"
+    arch: "x86_64"
+  - location: "~/Downloads/ubuntu-22.04-server-cloudimg-arm64.img"
+    arch: "aarch64"
+
+  # Fallback to the latest release image.
+  # Hint: run `limactl prune` to invalidate the cache
+  - location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
+    arch: "x86_64"
+  - location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-arm64.img"
+    arch: "aarch64"
+
+# Expose host directories to the guest, the mount point might be accessible from all UIDs in the guest
+# Default: none
+mounts:
+  - location: "~"
+  - location: "/tmp/lima"
+    writable: true
+
+# CPUs: if you see performance issues, try limiting cpus to 1.
+# Default: 4
+cpus: 4
+
+# Memory size
+# Default: "4GiB"
+memory: "8GiB"
+
+# Disk size
+# Default: "100GiB"
+disk: "50GiB"
+
+ssh:
+  # A localhost port of the host. Forwarded to port 22 of the guest.
+  # Default: 0 (automatically assigned to a free port)
+  localPort: 0
+  # Load ~/.ssh/*.pub in addition to $LIMA_HOME/_config/user.pub .
+  # This option is useful when you want to use other SSH-based
+  # applications such as rsync with the Lima instance.
+  # If you have an insecure key under ~/.ssh, do not use this option.
+  # Default: true
+  loadDotSSHPubKeys: true
+  # Forward ssh agent into the instance.
+  # Default: false
+  forwardAgent: false
+
+# containerd is managed by k3s, not by Lima, so the values are set to false here.
+containerd:
+  system: false
+  user: false
+
+#networks:
+  # The instance can get routable IP addresses from the vmnet framework using
+  # https://github.com/lima-vm/socket_vmnet (since Lima v0.12) or
+  # https://github.com/lima-vm/vde_vmnet (deprecated) .
+  #
+  # Available networks are defined in
+  # $LIMA_HOME/_config/networks.yaml. Supported network types are "host",
+  # "shared", or "bridged".
+  #
+  # Interface "lima0": shared mode  (IP is assigned by macOS's bootpd)
+  #- lima: shared
+  # Interface "lima1": bridged mode (IP is assigned by a DHCP server on the physical network)
+#  - lima: bridged
+
+provision:
+  - mode: system
+    script: |
+      #!/bin/sh
+      export INSTALL_K3S_VERSION=v1.24.8+k3s1
+      curl -sfL https://get.k3s.io | sh -s - --disable traefik --write-kubeconfig-mode 644
+probes:
+  - script: |
+      #!/bin/bash
+      set -eux -o pipefail
+      if ! timeout 30s bash -c "until test -f /etc/rancher/k3s/k3s.yaml; do sleep 3; done"; then
+              echo >&2 "k3s is not running yet"
+              exit 1
+      fi
+    hint: |
+      The k3s kubeconfig file has not yet been created.
+      Run "limactl shell k3s sudo journalctl -u k3s" to check the log.
+      If that is still empty, check the bottom of the log at "/var/log/cloud-init-output.log".
+message: |
+  To run `kubectl` on the host (assumes kubectl is installed), run the following commands:
+  ------
+  mkdir -p "{{.Dir}}/conf"
+  export KUBECONFIG="{{.Dir}}/conf/kubeconfig.yaml"
+  limactl shell {{.Name}} sudo cat /etc/rancher/k3s/k3s.yaml >$KUBECONFIG
+  kubectl ...
+  ------

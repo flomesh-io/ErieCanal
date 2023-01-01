@@ -18,6 +18,7 @@ package certmanager
 
 import (
 	"github.com/flomesh-io/ErieCanal/pkg/certificate"
+	"github.com/flomesh-io/ErieCanal/pkg/config"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	certmgrclient "github.com/jetstack/cert-manager/pkg/client/clientset/versioned"
 	certmgrlister "github.com/jetstack/cert-manager/pkg/client/listers/certmanager/v1"
@@ -38,6 +39,7 @@ const (
 
 type Client struct {
 	ns                       string // namespace
+	mc                       *config.MeshConfig
 	cmClient                 certmgrclient.Interface
 	kubeClient               kubernetes.Interface
 	certificateRequestLister certmgrlister.CertificateRequestNamespaceLister
@@ -45,7 +47,8 @@ type Client struct {
 }
 
 type CertManager struct {
-	ca        *certificate.Certificate
-	client    *Client
-	issuerRef cmmeta.ObjectReference // it's the CA Issuer
+	ca           *certificate.Certificate
+	client       *Client
+	issuerRef    cmmeta.ObjectReference // it's the CA Issuer
+	certificates map[string]*certificate.Certificate
 }

@@ -31,6 +31,7 @@ type LocalControllers struct {
 	Ingressv1      *controller.Ingressv1Controller
 	IngressClassv1 *controller.IngressClassv1Controller
 	ServiceImport  *controller.ServiceImportController
+	Secret         *controller.SecretController
 	GatewayApi     *GatewayApiControllers
 }
 
