@@ -4,7 +4,7 @@ ARG TARGETARCH
 ARG DISTROLESS_TAG
 
 # Build the ingress-pipy binary
-FROM --platform=$BUILDPLATFORM golang:1.19-alpine3.15 as builder
+FROM --platform=$BUILDPLATFORM golang:1.19 as builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -17,7 +17,6 @@ RUN --mount=type=cache,target=/go/pkg go mod download
 COPY . .
 
 # Build
-RUN apk add make bash git
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH make build/ingress-pipy
