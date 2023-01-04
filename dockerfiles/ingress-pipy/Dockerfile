@@ -21,14 +21,10 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH make build/ingress-pipy
 
-# Builder image, pipy
-FROM flomesh/pipy:0.70.0-46-nonroot as pipy
-
 # Build the final image
-FROM gcr.io/distroless/base-nossl-debian11:$DISTROLESS_TAG
+FROM flomesh/pipy:0.70.0-46-nonroot
 WORKDIR /
 COPY --from=builder /workspace/bin/ingress-pipy .
-COPY --from=pipy /usr/local/bin/pipy /usr/local/bin/pipy
 
 USER 65532:65532
 
