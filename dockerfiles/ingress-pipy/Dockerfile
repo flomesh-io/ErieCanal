@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM flomesh/pipy:0.70.0-46-nonroot as pipy
 
 # Build the final image
-FROM gcr.io/distroless/base-debian11:$DISTROLESS_TAG
+FROM gcr.io/distroless/base-nossl-debian11:$DISTROLESS_TAG
 WORKDIR /
 COPY --from=builder /workspace/bin/ingress-pipy .
 COPY --from=pipy /usr/local/bin/pipy /usr/local/bin/pipy
