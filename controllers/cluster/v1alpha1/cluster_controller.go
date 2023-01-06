@@ -273,12 +273,12 @@ func getKubeConfig(cluster *clusterv1alpha1.Cluster) (*rest.Config, ctrl.Result,
 func remoteKubeConfig(cluster *clusterv1alpha1.Cluster) (*rest.Config, ctrl.Result, error) {
 	// use the current context in kubeconfig
 	kubeconfig, err := clientcmd.BuildConfigFromKubeconfigGetter("", func() (*api.Config, error) {
-		cfg := &api.Config{}
-		if err := json.Unmarshal([]byte(cluster.Spec.Kubeconfig), cfg); err != nil {
+		cfg := api.Config{}
+		if err := json.Unmarshal([]byte(cluster.Spec.Kubeconfig), &cfg); err != nil {
 			return nil, err
 		}
 
-		return cfg, nil
+		return &cfg, nil
 	})
 
 	if err != nil {
