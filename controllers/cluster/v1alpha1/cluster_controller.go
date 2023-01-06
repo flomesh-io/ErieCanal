@@ -31,7 +31,6 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/flomesh-io/ErieCanal/pkg/repo"
 	"github.com/flomesh-io/ErieCanal/pkg/util"
-	"github.com/ghodss/yaml"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -40,7 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/clientcmd/api"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -272,13 +271,13 @@ func getKubeConfig(cluster *clusterv1alpha1.Cluster) (*rest.Config, ctrl.Result,
 
 func remoteKubeConfig(cluster *clusterv1alpha1.Cluster) (*rest.Config, ctrl.Result, error) {
 	// use the current context in kubeconfig
-	kubeconfig, err := clientcmd.BuildConfigFromKubeconfigGetter("", func() (*api.Config, error) {
-		cfg := api.Config{}
-		if err := yaml.Unmarshal([]byte(cluster.Spec.Kubeconfig), &cfg); err != nil {
+	kubeconfig, err := clientcmd.BuildConfigFromKubeconfigGetter("", func() (*clientcmdapi.Config, error) {
+		cfg, err := clientcmd.Load([]byte(cluster.Spec.Kubeconfig))
+		if err != nil {
 			return nil, err
 		}
 
-		return &cfg, nil
+		return cfg, nil
 	})
 
 	if err != nil {
