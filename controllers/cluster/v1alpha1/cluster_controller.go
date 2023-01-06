@@ -31,7 +31,6 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/flomesh-io/ErieCanal/pkg/repo"
 	"github.com/flomesh-io/ErieCanal/pkg/util"
-	"io/ioutil"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -40,13 +39,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
-	"os"
-	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 	"sync"
 	"time"
 )
@@ -273,19 +270,16 @@ func getKubeConfig(cluster *clusterv1alpha1.Cluster) (*rest.Config, ctrl.Result,
 }
 
 func remoteKubeConfig(cluster *clusterv1alpha1.Cluster) (*rest.Config, ctrl.Result, error) {
-	if _, err := os.Stat(clientcmd.RecommendedConfigDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(clientcmd.RecommendedConfigDir, 0644); err != nil {
-			return nil, ctrl.Result{}, err
-		}
-	}
-
-	kubeconfigPath := filepath.Join(clientcmd.RecommendedConfigDir, strings.ReplaceAll(cluster.Key(), "/", "-"))
-	if err := ioutil.WriteFile(kubeconfigPath, []byte(cluster.Spec.Kubeconfig), 0644); err != nil {
-		return nil, ctrl.Result{}, err
-	}
-
 	// use the current context in kubeconfig
-	kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	kubeconfig, err := clientcmd.BuildConfigFromKubeconfigGetter("", func() (*clientcmdapi.Config, error) {
+		cfg, err := clientcmd.Load([]byte(cluster.Spec.Kubeconfig))
+		if err != nil {
+			return nil, err
+		}
+
+		return cfg, nil
+	})
+
 	if err != nil {
 		return nil, ctrl.Result{}, err
 	}
