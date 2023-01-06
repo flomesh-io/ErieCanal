@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	clusterv1alpha1 "github.com/flomesh-io/ErieCanal/apis/cluster/v1alpha1"
 	svcexpv1alpha1 "github.com/flomesh-io/ErieCanal/apis/serviceexport/v1alpha1"
@@ -32,6 +31,7 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/flomesh-io/ErieCanal/pkg/repo"
 	"github.com/flomesh-io/ErieCanal/pkg/util"
+	"github.com/ghodss/yaml"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -274,7 +274,7 @@ func remoteKubeConfig(cluster *clusterv1alpha1.Cluster) (*rest.Config, ctrl.Resu
 	// use the current context in kubeconfig
 	kubeconfig, err := clientcmd.BuildConfigFromKubeconfigGetter("", func() (*api.Config, error) {
 		cfg := api.Config{}
-		if err := json.Unmarshal([]byte(cluster.Spec.Kubeconfig), &cfg); err != nil {
+		if err := yaml.Unmarshal([]byte(cluster.Spec.Kubeconfig), &cfg); err != nil {
 			return nil, err
 		}
 
