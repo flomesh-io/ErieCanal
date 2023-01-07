@@ -29,8 +29,8 @@ This chart bootstraps a ErieCanal deployment on a [Kubernetes](http://kubernetes
 To install the chart with the release name `ec` run:
 
 ```bash
-$ helm repo add ec https://ec.flomesh.io
-$ helm install ec ec/erie-canal --namespace erie-canal --create-namespace --version=0.1.0-beta.3
+helm repo add ec https://ec.flomesh.io
+helm install ec ec/erie-canal --namespace erie-canal --create-namespace --version=0.1.0-beta.3
 ```
 
 The command deploys ErieCanal on the Kubernetes cluster using the default configuration in namespace `erie-canal` and creates the namespace if it doesn't exist. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -42,7 +42,7 @@ As soon as all pods are up and running, you can start to evaluate ErieCanal.
 To uninstall the `ec` deployment run:
 
 ```bash
-$ helm uninstall ec --namespace erie-canal
+helm uninstall ec --namespace erie-canal
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
@@ -52,12 +52,19 @@ The command removes all the Kubernetes components associated with the chart and 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-$ helm install ec ec/erie-canal --namespace erie-canal --create-namespace --version=0.1.0-beta.3 \
+helm install ec ec/erie-canal \
+  --namespace erie-canal \
+  --create-namespace \
+  --version=0.1.0-beta.3 \
   --set ec.image.pullPolicy=Always
 ```
 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install ec ec/erie-canal --namespace erie-canal --create-namespace --version=0.1.0-beta.3 -f values-override.yaml
+helm install ec ec/erie-canal \
+  --namespace erie-canal \
+  --create-namespace \
+  --version=0.1.0-beta.3 \
+  -f values-override.yaml
 ```
