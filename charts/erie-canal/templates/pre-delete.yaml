@@ -23,12 +23,14 @@ spec:
         - sh
         - -c
         - |
-          kubectl delete namespacedingresses.flomesh.io --all -A
-          kubectl delete serviceimports.flomesh.io --all -A
-          kubectl delete serviceexports.flomesh.io --all -A
-          kubectl delete proxyprofiles.flomesh.io --all
-          kubectl delete clusters.flomesh.io --all
-          kubectl delete -f /crds/
+          kubectl delete namespacedingresses.flomesh.io --all -A --ignore-not-found=true
+          kubectl delete globaltrafficpolicies.flomesh.io --all -A --ignore-not-found=true
+          kubectl delete multiclusterendpoints.flomesh.io --all -A --ignore-not-found=true
+          kubectl delete serviceimports.flomesh.io --all -A --ignore-not-found=true
+          kubectl delete serviceexports.flomesh.io --all -A --ignore-not-found=true
+          kubectl delete proxyprofiles.flomesh.io --all --ignore-not-found=true
+          kubectl delete clusters.flomesh.io --all --ignore-not-found=true
+          kubectl delete --ignore-not-found=true -f /crds/
         volumeMounts:
         - mountPath: /manifests
           name: {{ .Values.ec.configmaps.manifests.name }}

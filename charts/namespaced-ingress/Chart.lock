@@ -1,6 +1,6 @@
 dependencies:
 - name: tpls
   repository: file://../tpls
-  version: 0.1.0-beta.2
-digest: sha256:c72c4d49da78f1f3ac6322dc30c3373a5ed431ddc73810028ecb47ca975e04c5
-generated: "2023-01-06T22:37:33.128013+08:00"
+  version: 0.1.0-beta.3
+digest: sha256:4ae22095a1928c195c483aa1abe14b25d469e9ca00b78121428274b79212cba6
+generated: "2023-01-07T15:26:20.730909+08:00"
