@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "ec.labels" . | nindent 4 }}
   annotations:
-    meta.flomesh.io/erie-canal-namespace: {{ include "ec.namespace" . }}
+    meta.flomesh.io/namespace: {{ include "ec.namespace" . }}
     meta.flomesh.io/ingress-pipy-svc: {{ .Values.ec.ingress.service.name }}
 spec:
   controller: flomesh.io/ingress-pipy

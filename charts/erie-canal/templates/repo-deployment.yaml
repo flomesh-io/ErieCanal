@@ -13,9 +13,16 @@ spec:
       {{- include "ec.repo.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.ec.repo.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "ec.repo.labels" . | nindent 8 }}
         {{- include "ec.repo.selectorLabels" . | nindent 8 }}
+        {{- with .Values.ec.repo.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       containers:
       - name: repo

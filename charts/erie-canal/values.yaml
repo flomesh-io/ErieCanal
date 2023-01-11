@@ -1,4 +1,4 @@
-# Default values for fsm.
+# Default values for ErieCanal.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -100,12 +100,10 @@ ec:
       # fsGroup: 2000
     securityContext:
       allowPrivilegeEscalation: false
-      # capabilities:
-      #   drop:
-      #   - ALL
-      # readOnlyRootFilesystem: true
-      # runAsNonRoot: true
-      # runAsUser: 1000
+      capabilities:
+        drop:
+        - ALL
+
     # -- Enable Pod Disruption Budget
     enablePodDisruptionBudget: false
     # -- Auto scale configuration
@@ -161,12 +159,10 @@ ec:
       # fsGroup: 2000
     securityContext:
       allowPrivilegeEscalation: false
-      # capabilities:
-      #   drop:
-      #   - ALL
-      # readOnlyRootFilesystem: true
-      # runAsNonRoot: true
-      # runAsUser: 1000
+      capabilities:
+        drop:
+        - ALL
+
     # -- Enable Pod Disruption Budget
     enablePodDisruptionBudget: false
     # -- Auto scale configuration
@@ -233,14 +229,12 @@ ec:
       # fsGroup: 2000
     securityContext:
       allowPrivilegeEscalation: false
-#      capabilities:
+      capabilities:
+        drop:
+        - ALL
 #        add:
 #        - NET_BIND_SERVICE
-#        drop:
-#        - ALL
-      # readOnlyRootFilesystem: true
-      # runAsNonRoot: true
-      # runAsUser: 1000
+
     # -- Enable Pod Disruption Budget
     enablePodDisruptionBudget: false
     # -- Auto scale configuration
@@ -319,6 +313,8 @@ ec:
     egress:
       name: erie-canal-egress-gateway-pjs
 
+  certificate:
+    caBundleName: flomesh-ca-bundle
+
 certManager:
   enabled: false
-  caBundleName: flomesh-ca-bundle
