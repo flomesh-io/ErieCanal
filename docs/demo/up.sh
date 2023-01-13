@@ -11,14 +11,14 @@ function check_command() {
     local installer="$2"
     if ! command -v $1 &> /dev/null
     then
-        echo "$1 could not be found"
-        if [[ -v $installer ]]; then
-        exit 1
+        echo "missing $1"
+        if [ -v $installer ]; then
+            exit 1
         fi
         echo "Installing $1"
         eval $installer
     else
-        echo "command $1 - exists"
+        echo "found $1"
     fi
 }
 
@@ -39,7 +39,7 @@ function create_clusters() {
         --wait
         ((API_PORT=API_PORT+1))
         ((PORT=PORT+1))
-    done    
+    done
 }
 
 function install_eriecanal() {
