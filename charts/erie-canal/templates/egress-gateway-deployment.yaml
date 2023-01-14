@@ -19,10 +19,16 @@ spec:
       labels:
         {{- include "ec.egress-gateway.labels" . | nindent 8 }}
         {{- include "ec.egress-gateway.selectorLabels" . | nindent 8 }}
+        {{- with .Values.ec.egressGateway.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
         prometheus.io/path: '/stats/prometheus'
         prometheus.io/port: '15010'
         prometheus.io/scrape: 'true'
+        {{- with .Values.ec.egressGateway.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       containers:
       - name: pipy

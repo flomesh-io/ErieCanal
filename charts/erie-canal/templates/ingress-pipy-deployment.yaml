@@ -20,10 +20,17 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      {{- with .Values.ec.ingress.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "ec.ingress-pipy.labels" . | nindent 8 }}
         {{- include "ec.ingress-pipy.selectorLabels" . | nindent 8 }}
         ingress.flomesh.io/namespaced: {{ .Values.ec.ingress.namespaced | quote }}
+        {{- with .Values.ec.ingress.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       initContainers:
       - name: wait-manager
@@ -75,12 +82,12 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 5
           tcpSocket:
-            port: {{ .Values.ec.ingress.http.containerPort }}
+            port: 8081
         readinessProbe:
           initialDelaySeconds: 5
           timeoutSeconds: 5
           tcpSocket:
-            port: {{ .Values.ec.ingress.http.containerPort }}
+            port: 8081
       terminationGracePeriodSeconds: 60
       {{- with .Values.ec.ingress.podSecurityContext }}
       securityContext:

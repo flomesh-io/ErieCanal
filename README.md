@@ -30,7 +30,7 @@ To install the chart with the release name `ec` run:
 
 ```bash
 helm repo add ec https://ec.flomesh.io
-helm install ec ec/erie-canal --namespace erie-canal --create-namespace --version=0.1.0-beta.3
+helm install ec ec/erie-canal --namespace erie-canal --create-namespace --version=0.1.0-beta.5
 ```
 
 The command deploys ErieCanal on the Kubernetes cluster using the default configuration in namespace `erie-canal` and creates the namespace if it doesn't exist. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -55,7 +55,7 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 helm install ec ec/erie-canal \
   --namespace erie-canal \
   --create-namespace \
-  --version=0.1.0-beta.3 \
+  --version=0.1.0-beta.5 \
   --set ec.image.pullPolicy=Always
 ```
 
@@ -65,6 +65,6 @@ Alternatively, a YAML file that specifies the values for the parameters can be p
 helm install ec ec/erie-canal \
   --namespace erie-canal \
   --create-namespace \
-  --version=0.1.0-beta.3 \
+  --version=0.1.0-beta.5 \
   -f values-override.yaml
 ```

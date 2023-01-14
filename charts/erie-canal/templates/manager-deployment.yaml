@@ -12,9 +12,16 @@ spec:
       {{- include "ec.manager.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.ec.manager.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "ec.manager.labels" . | nindent 8 }}
         {{- include "ec.manager.selectorLabels" . | nindent 8 }}
+        {{- with .Values.ec.manager.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       initContainers:
       - name: init

@@ -53,7 +53,7 @@ data:
         {{- else }}
         "manager": "archon",
         {{- end }}
-        "caBundleName": "{{ .Values.certManager.caBundleName }}",
+        "caBundleName": "{{ .Values.ec.certificate.caBundleName }}",
         "caBundleNamespace": ""
       },
 
