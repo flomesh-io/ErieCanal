@@ -36,7 +36,7 @@
         Object.entries(ingress.services).map(
           ([k, v]) =>(
             ((targets, balancer, balancerInst) => (
-              targets = v?.upstream?.endpoints?.map(ep => `${ep.ip}:${ep.port}`),
+              targets = v?.upstream?.endpoints?.map?.(ep => `${ep.ip}:${ep.port}`),
               v?.upstream?.sslCert?.ca && (
                 addUpstreamIssuingCA(v.upstream.sslCert.ca)
               ),
