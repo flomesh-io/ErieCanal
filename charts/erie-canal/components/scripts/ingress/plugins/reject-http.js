@@ -30,38 +30,38 @@
   })
 
   .pipeline()
-  .handleMessageStart(
-    msg => (
-      ((host, hostname)  => (
-        host = msg.head.headers['host'],
-        hostname = host ? host.split(":")[0] : '',
+    .handleMessageStart(
+      msg => (
+        ((host, hostname)  => (
+          host = msg.head.headers['host'],
+          hostname = host ? host.split(":")[0] : '',
 
-        console.log("[reject-http] hostname", hostname),
-        console.log("[reject-http] __isTLS", __isTLS),
+          console.log("[reject-http] hostname", hostname),
+          console.log("[reject-http] __isTLS", __isTLS),
 
-        !__isTLS && (
-          _reject = (
-            Boolean(tlsDomains.find(domain => domain === hostname)) ||
-            Boolean(tlsWildcardDomains.find(domain => domain.test(hostname)))
+          !__isTLS && (
+            _reject = (
+              Boolean(tlsDomains.find(domain => domain === hostname)) ||
+              Boolean(tlsWildcardDomains.find(domain => domain.test(hostname)))
+            )
+          ),
+          console.log("[reject-http] _reject", _reject)
+        ))()
+      )
+    )
+    .branch(
+      () => (_reject), (
+        $ => $
+          .replaceMessage(
+            new Message({
+              "status": 403,
+              "headers": {
+                "Server": "pipy/0.70.0"
+              }
+            }, 'Forbidden')
           )
-        ),
-        console.log("[reject-http] _reject", _reject)
-      ))()
+      ), (
+        $=>$.chain()
+      )
     )
-  )
-  .branch(
-    () => (_reject), (
-      $ => $
-        .replaceMessage(
-          new Message({
-            "status": 403,
-            "headers": {
-              "Server": "pipy/0.70.0"
-            }
-          }, 'Forbidden')
-        )
-    ), (
-      $=>$.chain()
-    )
-  )
 )()

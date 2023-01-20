@@ -16,11 +16,11 @@
 
 pipy()
   .pipeline()
-  .replaceMessage(
-    new Message({
-      "status": 404,
-      "headers": {
-        "Server": "pipy/0.70.0"
-      }
-    }, 'Service Not Found')
-  )
+    .replaceMessage(
+      new Message({
+        "status": 404,
+        "headers": {
+          "Server": "pipy/0.70.0"
+        }
+      }, 'Service Not Found')
+    )

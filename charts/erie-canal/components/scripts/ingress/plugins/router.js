@@ -27,28 +27,27 @@
 
   ) => pipy()
 
-    .import({
-      __route: 'main',
-    })
+  .import({
+    __route: 'main',
+  })
 
-    .pipeline()
-      .handleMessageStart(
-        msg => (
-          ((
-            r = router.find(
-              msg.head.headers.host,
-              msg.head.path,
-            )
-          ) => (
-            __route = r?.service,
-            r?.rewrite && (
-              msg.head.path = msg.head.path.replace(r.rewrite[0], r.rewrite[1])
-            ),
-            console.log('[router] Request Host: ', msg.head.headers['host']),
-            console.log('[router] Request Path: ', msg.head.path)
-          ))()
-        )
+  .pipeline()
+    .handleMessageStart(
+      msg => (
+        ((
+          r = router.find(
+            msg.head.headers.host,
+            msg.head.path,
+          )
+        ) => (
+          __route = r?.service,
+          r?.rewrite && (
+            msg.head.path = msg.head.path.replace(r.rewrite[0], r.rewrite[1])
+          ),
+          console.log('[router] Request Host: ', msg.head.headers['host']),
+          console.log('[router] Request Path: ', msg.head.path)
+        ))()
       )
-      .chain()
-
+    )
+    .chain()
 )()
