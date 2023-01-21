@@ -32,7 +32,7 @@ openssl req -new -x509 -nodes -days 365000 \
    -subj '/CN=flomesh.io'
 
 openssl genrsa -out ingress-pipy.key 4096
-openssl req -new -key ingress-pipy.key -out ingress-pipy.csr -subj '/CN=fsm-ingress-pipy-controller.flomesh'
+openssl req -new -key ingress-pipy.key -out ingress-pipy.csr -subj '/CN=ec-ingress-pipy-controller.flomesh'
 openssl x509 -req -in ingress-pipy.csr -CA ca.crt -CAkey ca.key -extfile extfile.cnf -CAcreateserial -out ingress-pipy.crt -days 365000
 
 openssl genrsa -out client.key 4096

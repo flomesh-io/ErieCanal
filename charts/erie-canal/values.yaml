@@ -53,11 +53,11 @@ ec:
 
   pipy:
     imageName: pipy
-    tag: 0.70.0-46
+    tag: 0.90.0-rc1-nonroot
 
   pipyRepo:
     imageName: pipy-repo
-    tag: 0.70.0-46
+    tag: 0.90.0-rc1
 
   waitForIt:
     imageName: wait-for-it
@@ -216,7 +216,9 @@ ec:
         cpu: "0.5"
         memory: "128M"
     # Extra env variables those will be appended to ingress container
-    env: []
+    env:
+    - name: GIN_MODE
+      value: release
     # -- ErieCanal Pipy Ingress Controller's pod labels
     podLabels: {}
     podAnnotations: {}

@@ -1,4 +1,4 @@
-fsm:
+ec:
   logLevel: 5
   image:
     pullPolicy: Always

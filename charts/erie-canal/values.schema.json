@@ -166,7 +166,7 @@
             },
             "tag": {
               "type": "string",
-              "default": "0.70.0-46",
+              "default": "0.90.0-rc1",
               "title": "The tag Schema"
             }
           }
@@ -797,7 +797,7 @@
             },
             "name": {
               "type": "string",
-              "default": "fsm-manager",
+              "default": "erie-canal-manager",
               "title": "The name Schema"
             },
             "replicaCount": {

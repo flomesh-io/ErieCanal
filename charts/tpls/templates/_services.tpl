@@ -56,8 +56,24 @@ Service Full Name - manager
 {{- end }}
 
 {{/*
-Service Full Name - ingress-pipy
+Service Host - ingress-pipy
 */}}
 {{- define "ec.ingress-pipy.host" -}}
 {{- printf "%s.%s.svc" .Values.ec.ingress.service.name (include "ec.namespace" .) -}}
+{{- end }}
+
+{{/*
+Heath port - ingress-pipy
+*/}}
+{{- define "ec.ingress-pipy.heath.port" -}}
+{{- if .Values.ec.ingress.enabled}}
+{{- if and .Values.ec.ingress.http.enabled (not (empty .Values.ec.ingress.http.containerPort)) }}
+{{- .Values.ec.ingress.http.containerPort}}
+{{- else if and .Values.ec.ingress.tls.enabled (not (empty .Values.ec.ingress.tls.containerPort)) }}
+{{- else }}
+8081
+{{- end }}
+{{- else }}
+8081
+{{- end }}
 {{- end }}
