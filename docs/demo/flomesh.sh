@@ -336,7 +336,7 @@ EOF"
 run "sleep 1" 
 done
 
-    desc "After exporting the services, FSM will automatically create ingress rules for them, and with the rules, you can access these services through Ingress"
+    desc "After exporting the services, ErieCanal will automatically create ingress rules for them, and with the rules, you can access these services through Ingress"
     for CONFIG in kubeconfig_c1 kubeconfig_c3
     do
         CLUSTER_NAME=$(if [ "${CONFIG}" == "kubeconfig_c1" ]; then echo "cluster-1"; elif [ "${CONFIG}" == "kubeconfig_c2" ]; then echo "cluster-2"; else echo "cluster-3"; fi)
