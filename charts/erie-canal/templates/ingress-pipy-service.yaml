@@ -1,5 +1,5 @@
 {{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if not .Values.ec.ingress.namespaced }}
+{{- if and (not .Values.ec.ingress.namespaced) (or .Values.ec.ingress.http.enabled .Values.ec.ingress.tls.enabled) }}
 apiVersion: v1
 kind: Service
 metadata:

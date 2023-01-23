@@ -1,5 +1,5 @@
 {{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if not .Values.ec.ingress.namespaced }}
+{{- if and (not .Values.ec.ingress.namespaced) (or .Values.ec.ingress.http.enabled .Values.ec.ingress.tls.enabled) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -82,12 +82,12 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 5
           tcpSocket:
-            port: 8081
+            port: {{ include "ec.ingress-pipy.heath.port" . }}
         readinessProbe:
           initialDelaySeconds: 5
           timeoutSeconds: 5
           tcpSocket:
-            port: 8081
+            port: {{ include "ec.ingress-pipy.heath.port" . }}
       terminationGracePeriodSeconds: 60
       {{- with .Values.ec.ingress.podSecurityContext }}
       securityContext:

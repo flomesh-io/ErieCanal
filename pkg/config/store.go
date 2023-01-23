@@ -25,23 +25,23 @@ import (
 )
 
 var (
-	meshMetadata             FsmMetadata
+	meshMetadata             ErieCanalMetadata
 	DefaultWatchedConfigMaps = sets.String{}
 )
 
 func init() {
 	DefaultWatchedConfigMaps.Insert(commons.MeshConfigName)
-	meshMetadata = getFsmMetadata()
+	meshMetadata = getErieCanalMetadata()
 }
 
 type Store struct {
 	MeshConfig *MeshConfigClient
 }
 
-type FsmMetadata struct {
-	PodName      string `envconfig:"POD_NAME" required:"true" split_words:"true"`
-	PodNamespace string `envconfig:"POD_NAMESPACE" required:"true" split_words:"true"`
-	FsmNamespace string `envconfig:"NAMESPACE" required:"true" split_words:"true"`
+type ErieCanalMetadata struct {
+	PodName            string `envconfig:"POD_NAME" required:"true" split_words:"true"`
+	PodNamespace       string `envconfig:"POD_NAMESPACE" required:"true" split_words:"true"`
+	ErieCanalNamespace string `envconfig:"NAMESPACE" required:"true" split_words:"true"`
 }
 
 func NewStore(k8sApi *kube.K8sAPI) *Store {
@@ -51,8 +51,8 @@ func NewStore(k8sApi *kube.K8sAPI) *Store {
 	}
 }
 
-func getFsmMetadata() FsmMetadata {
-	var metadata FsmMetadata
+func getErieCanalMetadata() ErieCanalMetadata {
+	var metadata ErieCanalMetadata
 
 	err := envconfig.Process("ErieCanal", &metadata)
 	if err != nil {
@@ -72,5 +72,5 @@ func GetErieCanalPodNamespace() string {
 }
 
 func GetErieCanalNamespace() string {
-	return meshMetadata.FsmNamespace
+	return meshMetadata.ErieCanalNamespace
 }
