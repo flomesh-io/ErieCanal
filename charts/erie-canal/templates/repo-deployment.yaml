@@ -32,10 +32,9 @@ spec:
         - name: repo
           containerPort: {{ .Values.ec.services.repo.containerPort }}
         command:
-        - sh
-        - -c
-        - |
-          /usr/local/bin/pipy --admin-port={{ .Values.ec.services.repo.port }}
+        - pipy
+        args:
+        - --admin-port={{ .Values.ec.services.repo.containerPort }}
         resources:
           {{- toYaml .Values.ec.repo.resources | nindent 10 }}
         env:
