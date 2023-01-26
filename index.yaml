@@ -11,6 +11,53 @@ entries:
         - name: support
           url: https://github.com/flomesh-io/ErieCanal/issues
     apiVersion: v2
+    appVersion: 0.1.0-rc.1
+    created: "2023-01-26T09:11:38.456816641Z"
+    dependencies:
+    - name: tpls
+      repository: file://../tpls
+      version: 0.1.0-rc.1
+    - condition: certManager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: 1.7.3
+    description: A Helm chart to install the ErieCanal on Kubernetes
+    digest: a8e4167b7732215bb43de48488fc61e1e3f612bb1e56b43fa6d0e2adf2586838
+    home: https://flomesh.io
+    icon: https://flomesh-io.github.io/ErieCanal/flomesh.png
+    keywords:
+    - kubernetes
+    - helm
+    - service mesh
+    - ingress
+    - gateway api
+    - olm
+    - traffic management
+    - pipy
+    - sidecar
+    - proxy
+    kubeVersion: '>= 1.19.0-0'
+    maintainers:
+    - email: reaver@flomesh.io
+      name: Eric
+    name: erie-canal
+    sources:
+    - https://github.com/flomesh-io/ErieCanal
+    - https://github.com/flomesh-io/pipy
+    type: application
+    urls:
+    - https://flomesh-io.github.io/ErieCanal/erie-canal-0.1.0-rc.1.tgz
+    version: 0.1.0-rc.1
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial Import
+      artifacthub.io/links: |-
+        - name: source
+          url: https://github.com/flomesh-io/ErieCanal
+        - name: support
+          url: https://github.com/flomesh-io/ErieCanal/issues
+    apiVersion: v2
     appVersion: 0.1.0-beta.3
     created: "2023-01-07T07:35:40.607447248Z"
     dependencies:
@@ -285,6 +332,16 @@ entries:
     version: 0.1.0-alpha.1
   tpls:
   - apiVersion: v2
+    appVersion: 0.1.0-rc.1
+    created: "2023-01-26T09:11:38.457159839Z"
+    description: A Helm chart for ErieCanal templates
+    digest: 5b05d6bbb7aef6bb7087ec3d924ee60b4b7e230e3097ae9669ac100ac6771d2f
+    name: tpls
+    type: library
+    urls:
+    - https://flomesh-io.github.io/ErieCanal/tpls-0.1.0-rc.1.tgz
+    version: 0.1.0-rc.1
+  - apiVersion: v2
     appVersion: 0.1.0-beta.3
     created: "2023-01-07T07:35:40.607724848Z"
     description: A Helm chart for ErieCanal templates
@@ -344,4 +401,4 @@ entries:
     urls:
     - https://flomesh-io.github.io/ErieCanal/tpls-0.1.0-alpha.1.tgz
     version: 0.1.0-alpha.1
-generated: "2023-01-14T05:30:44.462628993Z"
+generated: "2023-01-26T09:11:38.445832076Z"
