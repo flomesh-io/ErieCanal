@@ -53,11 +53,11 @@ ec:
 
   pipy:
     imageName: pipy
-    tag: 0.90.0-rc1-nonroot
+    tag: 0.90.0-18-nonroot
 
   pipyRepo:
     imageName: pipy-repo
-    tag: 0.90.0-rc1
+    tag: 0.90.0-18
 
   waitForIt:
     imageName: wait-for-it
