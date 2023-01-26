@@ -83,10 +83,7 @@ func main() {
 	klog.Infof("PIPY SPAWN = %d", spawn)
 
 	// start pipy
-	for i := int64(0); i < spawn; i++ {
-		klog.Infof("starting pipy(index=%d) ...", i)
-		startPipy(ingressRepoUrl)
-	}
+	startPipy(spawn, ingressRepoUrl)
 
 	startHealthAndReadyProbeServer()
 }
@@ -180,12 +177,17 @@ func (i *ingress) getIngressCpuLimitsQuota() (*resource.Quantity, error) {
 	return nil, errors.Errorf("No container named 'ingress' in POD %q", pod.Name)
 }
 
-func startPipy(ingressRepoUrl string) {
-	cmd := exec.Command("pipy", "--reuse-port", ingressRepoUrl)
+func startPipy(spawn int64, ingressRepoUrl string) {
+	args := []string{ingressRepoUrl}
+	if spawn > 1 {
+		args = append([]string{"--reuse-port", fmt.Sprintf("--threads=%d", spawn)}, args...)
+	}
+
+	cmd := exec.Command("pipy", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	klog.Infof("cmd = %#v", cmd)
+	klog.Infof("cmd = %v", cmd)
 
 	if err := cmd.Start(); err != nil {
 		klog.Fatal(err)
