@@ -1,5 +1,5 @@
 {{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if .Values.ec.ingress.namespaced }}
+{{- if and .Values.ec.ingress.namespaced (or .Values.nsig.spec.http.enabled .Values.nsig.spec.tls.enabled)}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -7,6 +7,9 @@ metadata:
   namespace: {{ .Values.nsig.metadata.namespace }}
   labels:
     {{- include "ec.ingress-pipy.labels" . | nindent 4 }}
+    {{- with .Values.nsig.spec.serviceLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- with .Values.nsig.spec.serviceAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}

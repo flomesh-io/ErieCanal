@@ -1073,6 +1073,11 @@ spec:
                 description: PodAnnotations, those annotations are applied to Ingress
                   POD
                 type: object
+              podLabels:
+                additionalProperties:
+                  type: string
+                description: PodAnnotations, those labels are applied to Ingress POD
+                type: object
               podSecurityContext:
                 description: 'PodSecurityContext holds pod-level security attributes
                   and common container settings. Optional: Defaults to empty.  See
@@ -1443,6 +1448,12 @@ spec:
                   type: string
                 description: ServiceAnnotations, those annotations are applied to
                   Ingress Service
+                type: object
+              serviceLabels:
+                additionalProperties:
+                  type: string
+                description: ServiceLabels, those annotations are applied to Ingress
+                  Service
                 type: object
               serviceType:
                 description: ServiceType determines how the Ingress is exposed. For

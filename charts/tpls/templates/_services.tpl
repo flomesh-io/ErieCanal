@@ -66,10 +66,11 @@ Service Host - ingress-pipy
 Heath port - ingress-pipy
 */}}
 {{- define "ec.ingress-pipy.heath.port" -}}
-{{- if .Values.ec.ingress.enabled}}
+{{- if .Values.ec.ingress.enabled }}
 {{- if and .Values.ec.ingress.http.enabled (not (empty .Values.ec.ingress.http.containerPort)) }}
-{{- .Values.ec.ingress.http.containerPort}}
+{{- .Values.ec.ingress.http.containerPort }}
 {{- else if and .Values.ec.ingress.tls.enabled (not (empty .Values.ec.ingress.tls.containerPort)) }}
+{{- .Values.ec.ingress.tls.containerPort }}
 {{- else }}
 8081
 {{- end }}
