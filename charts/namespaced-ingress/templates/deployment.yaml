@@ -1,5 +1,5 @@
 {{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
-{{- if .Values.ec.ingress.namespaced }}
+{{- if and .Values.ec.ingress.namespaced (or .Values.nsig.spec.http.enabled .Values.nsig.spec.tls.enabled)}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,6 +26,9 @@ spec:
         {{- include "ec.ingress-pipy.selectorLabels" . | nindent 8 }}
         ingress.flomesh.io/namespaced: {{ .Values.ec.ingress.namespaced | quote }}
         ingress.flomesh.io/ns: {{ .Values.nsig.metadata.namespace }}
+        {{- with .Values.nsig.spec.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- with .Values.nsig.spec.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
@@ -63,6 +66,8 @@ spec:
         args:
           - --v={{ default .Values.ec.logLevel .Values.nsig.spec.logLevel }}
         env:
+          - name: GIN_MODE
+            value: release
           {{- include "ec.common-env" . | nindent 10 }}
           {{- with .Values.nsig.spec.env }}
           {{- toYaml . | nindent 10 }}
@@ -84,12 +89,12 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 5
           tcpSocket:
-            port: {{ .Values.ec.ingress.http.containerPort }}
+            port: {{ include "ec.namespaced-ingress.heath.port" . }}
         readinessProbe:
           initialDelaySeconds: 5
           timeoutSeconds: 5
           tcpSocket:
-            port: {{ .Values.ec.ingress.http.containerPort }}
+            port: {{ include "ec.namespaced-ingress.heath.port" . }}
       terminationGracePeriodSeconds: 60
       {{- with .Values.nsig.spec.podSecurityContext }}
       securityContext:

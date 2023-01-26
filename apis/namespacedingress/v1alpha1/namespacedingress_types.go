@@ -31,9 +31,17 @@ type NamespacedIngressSpec struct {
 	// +optional
 	ServiceAnnotations map[string]string `json:"serviceAnnotations,omitempty"`
 
+	// ServiceLabels, those annotations are applied to Ingress Service
+	// +optional
+	ServiceLabels map[string]string `json:"serviceLabels,omitempty"`
+
 	// PodAnnotations, those annotations are applied to Ingress POD
 	// +optional
 	PodAnnotations map[string]string `json:"podAnnotations,omitempty"`
+
+	// PodAnnotations, those labels are applied to Ingress POD
+	// +optional
+	PodLabels map[string]string `json:"podLabels,omitempty"`
 
 	// +kubebuilder:default={enabled: true, port: {name: http, protocol: TCP, port: 80, targetPort: 8000}}
 
