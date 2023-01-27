@@ -114,7 +114,7 @@ function install_eriecanal() {
     helm repo update
 
     EC_NAMESPACE=erie-canal
-    EC_VERSION=0.1.0-beta.2
+    EC_VERSION=0.1.0
 
     for CLUSTER in ${!kubeconfig*}
     do
@@ -148,7 +148,7 @@ EOF
 }
 
 function install_osm_edge_binary() {
-    release=v1.3.0-beta.4
+    release=v1.3.0
     desc "downloading osm-edge cli release - ${release}"
     curl -L https://github.com/flomesh-io/osm-edge/releases/download/${release}/osm-edge-${release}-${system}-$arch.tar.gz | tar -vxzf -
     osm_binary="$(pwd)/${system}-${arch}/osm"
@@ -374,7 +374,7 @@ spec:
     - clusterKey: default/default/default/cluster-3
 EOF"
 
-    run "sleep 5"
+    run "sleep 6"
     desc "We have a multi-cluster service!"
     desc "See for yourself"
     run "$k2 exec "${curl_client}" -n curl -c curl -- curl -s http://httpbin.httpbin:8080/"
