@@ -66,3 +66,7 @@ helm install ec ec/erie-canal \
   --create-namespace \
   -f values-override.yaml
 ```
+
+## Demos
+
+Following the [demo](/docs/demo/README.md) here, have a quick view of ErieCanal.
