@@ -41,16 +41,6 @@ func (c *RemoteCache) OnServiceExportUpdate(oldExport, export *svcexpv1alpha1.Se
 		return
 	}
 
-	//if metautil.IsStatusConditionFalse(export.Status.Conditions, string(svcexpv1alpha1.ServiceExportValid)) {
-	//    klog.Warningf("[%s] ServiceExport %#v is ignored due to Valid status is false", c.connectorConfig.Key(), export)
-	//    return
-	//}
-	//
-	//if metautil.IsStatusConditionTrue(export.Status.Conditions, string(svcexpv1alpha1.ServiceExportConflict)) {
-	//    klog.Warningf("[%s] ServiceExport %#v is ignored due to Conflict status is true", c.connectorConfig.Key(), export)
-	//    return
-	//}
-
 	c.OnUpdate(oldExport, export)
 }
 
@@ -75,16 +65,8 @@ func (c *RemoteCache) OnUpdate(oldExport, export *svcexpv1alpha1.ServiceExport) 
 				Geo:           c.connectorConfig,
 				ServiceExport: export,
 				Service:       svc,
-				//Data:          make(map[string]interface{}),
 			},
 		},
-		//event.NewServiceExportMessage(
-		//	event.ServiceExportCreated,
-		//	c.connectorConfig,
-		//	export,
-		//	svc,
-		//	make(map[string]interface{}),
-		//),
 	)
 }
 
@@ -114,13 +96,6 @@ func (c *RemoteCache) OnServiceExportDelete(export *svcexpv1alpha1.ServiceExport
 				//Data:          make(map[string]interface{}),
 			},
 		},
-		//event.NewServiceExportMessage(
-		//	event.ServiceExportDeleted,
-		//	c.connectorConfig,
-		//	export,
-		//	svc,
-		//	make(map[string]interface{}),
-		//),
 	)
 }
 

@@ -145,21 +145,19 @@ type ingressChange struct {
 }
 
 type IngressChangeTracker struct {
-	lock                sync.Mutex
-	items               map[types.NamespacedName]*ingressChange
-	portNumberToNameMap map[types.NamespacedName]map[int32]string
-	controllers         *controller.LocalControllers
-	k8sAPI              *kube.K8sAPI
-	recorder            events.EventRecorder
+	lock        sync.Mutex
+	items       map[types.NamespacedName]*ingressChange
+	controllers *controller.LocalControllers
+	k8sAPI      *kube.K8sAPI
+	recorder    events.EventRecorder
 }
 
 func NewIngressChangeTracker(k8sAPI *kube.K8sAPI, controllers *controller.LocalControllers, recorder events.EventRecorder, mgr certificate.Manager) *IngressChangeTracker {
 	return &IngressChangeTracker{
-		items:               make(map[types.NamespacedName]*ingressChange),
-		controllers:         controllers,
-		k8sAPI:              k8sAPI,
-		recorder:            recorder,
-		portNumberToNameMap: make(map[types.NamespacedName]map[int32]string),
+		items:       make(map[types.NamespacedName]*ingressChange),
+		controllers: controllers,
+		k8sAPI:      k8sAPI,
+		recorder:    recorder,
 	}
 }
 
@@ -207,7 +205,7 @@ func isWildcardHost(host string) bool {
 	return false
 }
 
-func (ict *IngressChangeTracker) Update(previous, current *networkingv1.Ingress, isDelete bool) bool {
+func (ict *IngressChangeTracker) Update(previous, current *networkingv1.Ingress) bool {
 	ing := current
 	if ing == nil {
 		ing = previous
@@ -229,10 +227,10 @@ func (ict *IngressChangeTracker) Update(previous, current *networkingv1.Ingress,
 	change, exists := ict.items[namespacedName]
 	if !exists {
 		change = &ingressChange{}
-		change.previous = ict.ingressToIngressMap(previous, isDelete)
+		change.previous = ict.ingressToIngressMap(previous)
 		ict.items[namespacedName] = change
 	}
-	change.current = ict.ingressToIngressMap(current, isDelete)
+	change.current = ict.ingressToIngressMap(current)
 
 	if reflect.DeepEqual(change.previous, change.current) {
 		delete(ict.items, namespacedName)
@@ -243,22 +241,13 @@ func (ict *IngressChangeTracker) Update(previous, current *networkingv1.Ingress,
 	return len(ict.items) > 0
 }
 
-func (ict *IngressChangeTracker) ingressToIngressMap(ing *networkingv1.Ingress, isDelete bool) IngressMap {
+func (ict *IngressChangeTracker) ingressToIngressMap(ing *networkingv1.Ingress) IngressMap {
 	if ing == nil {
 		return nil
 	}
 
 	ingressMap := make(IngressMap)
-
 	ingKey := kube.MetaNamespaceKey(ing)
-
-	//tlsHosts := make(map[string]bool, 0)
-	//for _, tls := range ing.Spec.TLS {
-	//	for _, host := range tls.Hosts {
-	//		tlsHosts[host] = true
-	//	}
-	//}
-	//klog.V(5).Infof("TLS Hosts in Ingress %s/%s: %v", ing.Namespace, ing.Name, tlsHosts)
 
 	for _, rule := range ing.Spec.Rules {
 		//_, tls := tlsHosts[rule.Host]
@@ -275,7 +264,7 @@ func (ict *IngressChangeTracker) ingressToIngressMap(ing *networkingv1.Ingress, 
 				continue
 			}
 
-			svcPortName := ict.servicePortName(ing.Namespace, path.Backend.Service, isDelete)
+			svcPortName := ict.servicePortName(ing.Namespace, path.Backend.Service)
 			// in case of error or unexpected condition, ignore it
 			if svcPortName == nil {
 				klog.Warningf("svcPortName is nil for Namespace: %q,  Path: %#v", ing.Namespace, path)
@@ -309,7 +298,7 @@ func (ict *IngressChangeTracker) ingressToIngressMap(ing *networkingv1.Ingress, 
 	return ingressMap
 }
 
-func (ict *IngressChangeTracker) servicePortName(namespace string, service *networkingv1.IngressServiceBackend, isDelete bool) *ServicePortName {
+func (ict *IngressChangeTracker) servicePortName(namespace string, service *networkingv1.IngressServiceBackend) *ServicePortName {
 	if service != nil {
 		if service.Port.Name != "" {
 			return createSvcPortNameInstance(namespace, service.Name, service.Port.Name)
@@ -320,32 +309,15 @@ func (ict *IngressChangeTracker) servicePortName(namespace string, service *netw
 				Namespace: namespace,
 				Name:      service.Name,
 			}
-			cachedPortName := ict.portNumberToNameMap[namespacedSvcName][service.Port.Number]
-
-			if len(cachedPortName) > 0 {
-				if isDelete {
-					delete(ict.portNumberToNameMap[namespacedSvcName], service.Port.Number)
-					if len(ict.portNumberToNameMap[namespacedSvcName]) == 0 {
-						delete(ict.portNumberToNameMap, namespacedSvcName)
-					}
-				}
-				return createSvcPortNameInstance(namespace, service.Name, cachedPortName)
-			}
 
 			svc, err := ict.findService(namespace, service)
 			if err != nil {
-				klog.Errorf("not able to find service %s from anywhere, %#v", namespacedSvcName.String(), err)
+				klog.Errorf("Not able to find service %s from anywhere, %v", namespacedSvcName.String(), err)
 				return nil
 			}
 
 			for _, port := range svc.Spec.Ports {
 				if port.Port == service.Port.Number {
-					// cache the result
-					if ict.portNumberToNameMap[namespacedSvcName] == nil {
-						ict.portNumberToNameMap[namespacedSvcName] = make(map[int32]string)
-					}
-					ict.portNumberToNameMap[namespacedSvcName][port.Port] = port.Name
-
 					return createSvcPortNameInstance(namespace, service.Name, port.Name)
 				}
 			}
