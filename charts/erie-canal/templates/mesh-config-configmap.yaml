@@ -30,11 +30,15 @@ data:
         "namespaced": {{ .Values.ec.ingress.namespaced }},
         "http": {
           "enabled": {{ .Values.ec.ingress.http.enabled }},
-          "listen": {{ .Values.ec.ingress.http.containerPort }}
+          "bind": {{ .Values.ec.ingress.http.port }},
+          "listen": {{ .Values.ec.ingress.http.containerPort }},
+          "nodePort": {{ default 0 .Values.ec.ingress.http.nodePort }}
         },
         "tls": {
           "enabled": {{ .Values.ec.ingress.tls.enabled }},
+          "bind": {{ .Values.ec.ingress.tls.port }},
           "listen": {{ .Values.ec.ingress.tls.containerPort }},
+          "nodePort": {{ default 0 .Values.ec.ingress.tls.nodePort }},
           "mTLS": {{ .Values.ec.ingress.tls.mTLS }},
           "sslPassthrough": {
             "enabled": {{ .Values.ec.ingress.tls.sslPassthrough.enabled }},
