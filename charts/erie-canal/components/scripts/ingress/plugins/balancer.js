@@ -133,7 +133,7 @@
         _mTLS = _connectTLS && Boolean(_serviceCertChain) && Boolean(_servicePrivateKey),
 
         console.log("[balancer] _sourceIP", _sourceIP),
-        console.log("[balancer] _connectTLS", _connectTLS),
+        console.log("[balancer] _connectTLS", _connectTLS, "_mTLS", _mTLS),
         console.log("[balancer] _target.id", (_target || {id : ''}).id)
       )
     )
