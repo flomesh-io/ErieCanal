@@ -127,10 +127,16 @@ func (info BaseIngressInfo) TrustedCA() *route.CertificateSpec {
 	return info.trustedCA
 }
 
-type IngressMap map[ServicePortName]Route
+type IngressMap map[RouteKey]Route
 
-type BackendInfo struct {
-	ServicePortName ServicePortName
+type RouteKey struct {
+	ServicePortName
+	Host string
+	Path string
+}
+
+func (irk *RouteKey) String() string {
+	return fmt.Sprintf("%s#%s#%s", irk.Host, irk.Path, irk.ServicePortName.String())
 }
 
 type ingressChange struct {
@@ -277,19 +283,26 @@ func (ict *IngressChangeTracker) ingressToIngressMap(ing *networkingv1.Ingress, 
 			}
 			klog.V(5).Infof("ServicePortName %q", svcPortName.String())
 
-			// already exists, first one wins
-			if _, ok := ingressMap[*svcPortName]; ok {
-				continue
-			}
-
 			baseIngInfo := ict.newBaseIngressInfo(rule, path, *svcPortName)
 			if baseIngInfo == nil {
 				continue
 			}
 
-			ingressMap[*svcPortName] = ict.enrichIngressInfo(&rule, ing, baseIngInfo)
+			routeKey := RouteKey{
+				ServicePortName: *svcPortName,
+				Host:            baseIngInfo.Host(),
+				Path:            baseIngInfo.Path(),
+			}
 
-			klog.V(5).Infof("ServicePort %q is linked to rule %#v", svcPortName.String(), ingressMap[*svcPortName])
+			// already exists, first one wins
+			if _, ok := ingressMap[routeKey]; ok {
+				klog.Warningf("Duplicate route for tuple: %q", routeKey.String())
+				continue
+			}
+
+			ingressMap[routeKey] = ict.enrichIngressInfo(&rule, ing, baseIngInfo)
+
+			klog.V(5).Infof("Route %q is linked to rule %#v", routeKey.String(), ingressMap[routeKey])
 		}
 	}
 
