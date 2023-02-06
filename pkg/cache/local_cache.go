@@ -273,7 +273,9 @@ func (c *LocalCache) buildIngressConfig() routepkg.IngressData {
 		Routes: []routepkg.IngressRouteSpec{},
 	}
 
-	for svcName, route := range c.ingressMap {
+	for _, route := range c.ingressMap {
+		svcName := route.Backend()
+
 		ir := routepkg.IngressRouteSpec{
 			RouterSpec: routepkg.RouterSpec{
 				Host:    route.Host(),
