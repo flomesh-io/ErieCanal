@@ -22,15 +22,15 @@ import (
 )
 
 func (c *LocalCache) OnIngressv1Add(ingress *networkingv1.Ingress) {
-	c.onIngressUpdate(nil, ingress, false)
+	c.onIngressUpdate(nil, ingress)
 }
 
 func (c *LocalCache) OnIngressv1Update(oldIngress, ingress *networkingv1.Ingress) {
-	c.onIngressUpdate(oldIngress, ingress, false)
+	c.onIngressUpdate(oldIngress, ingress)
 }
 
 func (c *LocalCache) OnIngressv1Delete(ingress *networkingv1.Ingress) {
-	c.onIngressUpdate(ingress, nil, true)
+	c.onIngressUpdate(ingress, nil)
 }
 
 func (c *LocalCache) OnIngressv1Synced() {
@@ -42,9 +42,9 @@ func (c *LocalCache) OnIngressv1Synced() {
 	c.syncRoutes()
 }
 
-func (c *LocalCache) onIngressUpdate(oldIngress, ingress *networkingv1.Ingress, isDelete bool) {
+func (c *LocalCache) onIngressUpdate(oldIngress, ingress *networkingv1.Ingress) {
 	// ONLY update ingress after IngressClass, svc & ep are synced
-	if c.ingressChanges.Update(oldIngress, ingress, isDelete) && c.isInitialized() {
+	if c.ingressChanges.Update(oldIngress, ingress) && c.isInitialized() {
 		klog.V(5).Infof("Detects ingress change, syncing...")
 		c.Sync()
 	}
