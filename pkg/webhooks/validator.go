@@ -119,30 +119,6 @@ func validationResponseFromStatus(allowed bool, status metav1.Status) admission.
 	return resp
 }
 
-//func (h *validatingHandler) getObject() runtime.Object {
-//    kind := h.validator.Kind()
-//    klog.V(5).Infof("[Validator] Kind = %q", kind)
-//
-//	switch strings.ToLower(kind) {
-//	case "configmap":
-//		return &corev1.ConfigMap{}
-//	case "proxyprofile":
-//		return &pfv1alpha1.ProxyProfile{}
-//	case "cluster":
-//		return &clusterv1alpha1.Cluster{}
-//	case "namespacedingress":
-//		return &nsigv1alpha1.NamespacedIngress{}
-//	case "serviceimport":
-//		return &svcimpv1alpha1.ServiceImport{}
-//	case "serviceexport":
-//		return &svcexpv1alpha1.ServiceExport{}
-//	case "globaltrafficpolicy":
-//		return &gtpv1alpha1.GlobalTrafficPolicy{}
-//	}
-//
-//	return nil
-//}
-
 func ValidatingWebhookFor(validator Validator) *admission.Webhook {
 	return &admission.Webhook{
 		Handler: &validatingHandler{validator: validator},
