@@ -23,6 +23,7 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/webhooks/gatewayclass"
 	"github.com/flomesh-io/ErieCanal/pkg/webhooks/globaltrafficpolicy"
 	"github.com/flomesh-io/ErieCanal/pkg/webhooks/httproute"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/ingress"
 	"github.com/flomesh-io/ErieCanal/pkg/webhooks/namespacedingress"
 	"github.com/flomesh-io/ErieCanal/pkg/webhooks/serviceexport"
 	"github.com/flomesh-io/ErieCanal/pkg/webhooks/serviceimport"
@@ -35,6 +36,7 @@ func RegisterWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
 	serviceexport.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
 	serviceimport.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
 	globaltrafficpolicy.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
+	ingress.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
 }
 
 func RegisterGatewayApiWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
