@@ -20,7 +20,7 @@ pipy()
       new Message({
         "status": 404,
         "headers": {
-          "Server": "pipy/0.70.0"
+          "Server": "pipy/0.90.0"
         }
       }, 'Service Not Found')
     )
