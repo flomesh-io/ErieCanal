@@ -114,6 +114,7 @@ func (w *ConfigMapDefaulter) SetDefaults(obj interface{}) {
 	case commons.MeshConfigName:
 		cfg, err := config.ParseMeshConfig(cm)
 		if err != nil {
+			klog.Errorf("Failed to unmarshall mesh-config to MeshConfig: %s", err)
 			return
 		}
 
@@ -207,6 +208,16 @@ func (w *ConfigMapValidator) doValidation(obj interface{}) error {
 	switch cm.Name {
 	case commons.MeshConfigName:
 		// validate the config
+		cfg, err := config.ParseMeshConfig(cm)
+		if err != nil {
+			return err
+		}
+
+		if cfg.Ingress.Enabled {
+			if !cfg.Ingress.HTTP.Enabled && !cfg.Ingress.TLS.Enabled {
+				return fmt.Errorf("ingress.http.enabled and ingress.tls.enabled are both false, at least one should be enabled")
+			}
+		}
 	default:
 		// ignore
 	}

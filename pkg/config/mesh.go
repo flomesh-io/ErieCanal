@@ -74,13 +74,17 @@ type Ingress struct {
 }
 
 type HTTP struct {
-	Enabled bool  `json:"enabled"`
-	Listen  int32 `json:"listen" validate:"gte=1,lte=65535"`
+	Enabled  bool  `json:"enabled"`
+	Bind     int32 `json:"bind" validate:"gte=1,lte=65535"`
+	Listen   int32 `json:"listen" validate:"gte=1,lte=65535"`
+	NodePort int32 `json:"nodePort" validate:"gte=0,lte=65535"`
 }
 
 type TLS struct {
 	Enabled        bool           `json:"enabled"`
+	Bind           int32          `json:"bind" validate:"gte=1,lte=65535"`
 	Listen         int32          `json:"listen" validate:"gte=1,lte=65535"`
+	NodePort       int32          `json:"nodePort" validate:"gte=0,lte=65535"`
 	MTLS           bool           `json:"mTLS"`
 	SSLPassthrough SSLPassthrough `json:"sslPassthrough"`
 }

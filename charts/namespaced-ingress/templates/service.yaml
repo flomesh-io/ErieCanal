@@ -6,6 +6,7 @@ metadata:
   name: {{ printf "%s-%s" .Values.ec.ingress.name .Values.nsig.metadata.namespace }}
   namespace: {{ .Values.nsig.metadata.namespace }}
   labels:
+    ingress.flomesh.io/namespaced: {{ .Values.ec.ingress.namespaced | quote }}
     {{- include "ec.ingress-pipy.labels" . | nindent 4 }}
     {{- with .Values.nsig.spec.serviceLabels }}
     {{- toYaml . | nindent 4 }}
