@@ -62,30 +62,6 @@ func (h *mutatingHandler) Handle(ctx context.Context, req admission.Request) adm
 	return admission.PatchResponseFromRaw(req.Object.Raw, marshalled)
 }
 
-//func (h *mutatingHandler) getObject() runtime.Object {
-//    kind := h.defaulter.Kind()
-//    klog.V(5).Infof("[Defaulter] Kind = %q", kind)
-//
-//	switch strings.ToLower(kind) {
-//	case "configmap":
-//		return &corev1.ConfigMap{}
-//	case "proxyprofile":
-//		return &pfv1alpha1.ProxyProfile{}
-//	case "cluster":
-//		return &clusterv1alpha1.Cluster{}
-//	case "namespacedingress":
-//		return &nsigv1alpha1.NamespacedIngress{}
-//	case "serviceimport":
-//		return &svcimpv1alpha1.ServiceImport{}
-//	case "serviceexport":
-//		return &svcexpv1alpha1.ServiceExport{}
-//	case "globaltrafficpolicy":
-//		return &gtpv1alpha1.GlobalTrafficPolicy{}
-//	}
-//
-//	return nil
-//}
-
 func DefaultingWebhookFor(defaulter Defaulter) *admission.Webhook {
 	return &admission.Webhook{
 		Handler: &mutatingHandler{defaulter: defaulter},

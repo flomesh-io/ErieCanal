@@ -23,10 +23,10 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/certificate"
 	"github.com/flomesh-io/ErieCanal/pkg/certificate/utils"
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
-	"github.com/flomesh-io/ErieCanal/pkg/config"
 	ingresspipy "github.com/flomesh-io/ErieCanal/pkg/ingress"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/flomesh-io/ErieCanal/pkg/route"
+	"github.com/flomesh-io/ErieCanal/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -441,7 +441,7 @@ func (ict *IngressChangeTracker) enrichIngressInfo(rule *networkingv1.IngressRul
 	case "no", "false", "0", "off", "":
 		info.sessionSticky = false
 	default:
-		klog.Warningf("Invalid value %q of annotation pipy.ingress.kubernetes.io/session-sticky on Ingress %s/%s, setting session sticky to false", sticky, ing.Namespace, ing.Name)
+		klog.Warningf("Invalid value %q of annotation pipy.ingress.kubernetes.io/session-sticky of Ingress %s/%s, setting session sticky to false", sticky, ing.Namespace, ing.Name)
 		info.sessionSticky = false
 	}
 
@@ -472,20 +472,14 @@ func (ict *IngressChangeTracker) enrichIngressInfo(rule *networkingv1.IngressRul
 	// Upstream SSL Secret
 	upstreamSSLSecret := ing.Annotations[ingresspipy.PipyIngressAnnotationUpstreamSSLSecret]
 	if upstreamSSLSecret != "" {
-		strs := strings.Split(upstreamSSLSecret, "/")
-		switch len(strs) {
-		case 1:
+		ns, name, err := util.SecretNamespaceAndName(upstreamSSLSecret, ing)
+		if err == nil {
 			if info.upstream == nil {
 				info.upstream = &route.UpstreamSpec{}
 			}
-			info.upstream.SSLCert = ict.fetchSSLCert(ing, config.GetErieCanalNamespace(), strs[0])
-		case 2:
-			if info.upstream == nil {
-				info.upstream = &route.UpstreamSpec{}
-			}
-			info.upstream.SSLCert = ict.fetchSSLCert(ing, strs[0], strs[1])
-		default:
-			klog.Errorf("Wrong value %q of annotation pipy.ingress.kubernetes.io/upstream-ssl-secret on Ingress %s/%s", upstreamSSLSecret, ing.Namespace, ing.Name)
+			info.upstream.SSLCert = ict.fetchSSLCert(ing, ns, name)
+		} else {
+			klog.Errorf("Invalid value %q of annotation pipy.ingress.kubernetes.io/upstream-ssl-secret of Ingress %s/%s: %s", upstreamSSLSecret, ing.Namespace, ing.Name, err)
 		}
 	}
 
@@ -500,7 +494,7 @@ func (ict *IngressChangeTracker) enrichIngressInfo(rule *networkingv1.IngressRul
 	case "no", "false", "0", "off", "":
 		info.upstream.SSLVerify = false
 	default:
-		klog.Warningf("Invalid value %q of annotation pipy.ingress.kubernetes.io/upstream-ssl-verify on Ingress %s/%s, setting upstream-ssl-verify to false", upstreamSSLVerify, ing.Namespace, ing.Name)
+		klog.Warningf("Invalid value %q of annotation pipy.ingress.kubernetes.io/upstream-ssl-verify of Ingress %s/%s, setting upstream-ssl-verify to false", upstreamSSLVerify, ing.Namespace, ing.Name)
 		info.upstream.SSLVerify = false
 	}
 
@@ -512,7 +506,7 @@ func (ict *IngressChangeTracker) enrichIngressInfo(rule *networkingv1.IngressRul
 	case "no", "false", "0", "off", "":
 		info.verifyClient = false
 	default:
-		klog.Warningf("Invalid value %q of annotation pipy.ingress.kubernetes.io/tls-verify-client on Ingress %s/%s, setting verify client to false", verifyClient, ing.Namespace, ing.Name)
+		klog.Warningf("Invalid value %q of annotation pipy.ingress.kubernetes.io/tls-verify-client of Ingress %s/%s, setting verify client to false", verifyClient, ing.Namespace, ing.Name)
 		info.verifyClient = false
 	}
 
@@ -525,7 +519,7 @@ func (ict *IngressChangeTracker) enrichIngressInfo(rule *networkingv1.IngressRul
 	if err == nil {
 		info.verifyDepth = depth
 	} else {
-		klog.Warningf("Invalid value %q of annotation pipy.ingress.kubernetes.io/tls-verify-depth on Ingress %s/%s, setting verify depth to 1", ing.Annotations[ingresspipy.PipyIngressAnnotationTLSVerifyDepth], ing.Namespace, ing.Name)
+		klog.Warningf("Invalid value %q of annotation pipy.ingress.kubernetes.io/tls-verify-depth of Ingress %s/%s, setting verify depth to 1", ing.Annotations[ingresspipy.PipyIngressAnnotationTLSVerifyDepth], ing.Namespace, ing.Name)
 		info.verifyDepth = 1
 	}
 
@@ -535,14 +529,11 @@ func (ict *IngressChangeTracker) enrichIngressInfo(rule *networkingv1.IngressRul
 	}
 	trustedCASecret := ing.Annotations[ingresspipy.PipyIngressAnnotationTLSTrustedCASecret]
 	if trustedCASecret != "" {
-		strs := strings.Split(trustedCASecret, "/")
-		switch len(strs) {
-		case 1:
-			info.trustedCA = ict.fetchSSLCert(ing, config.GetErieCanalNamespace(), strs[0])
-		case 2:
-			info.trustedCA = ict.fetchSSLCert(ing, strs[0], strs[1])
-		default:
-			klog.Errorf("Wrong value %q of annotation pipy.ingress.kubernetes.io/tls-trusted-ca-secret on Ingress %s/%s", trustedCASecret, ing.Namespace, ing.Name)
+		ns, name, err := util.SecretNamespaceAndName(trustedCASecret, ing)
+		if err == nil {
+			info.trustedCA = ict.fetchSSLCert(ing, ns, name)
+		} else {
+			klog.Errorf("Invalid value %q of annotation pipy.ingress.kubernetes.io/tls-trusted-ca-secret of Ingress %s/%s: %s", trustedCASecret, ing.Namespace, ing.Name, err)
 		}
 	}
 
@@ -595,8 +586,8 @@ func (ict *IngressChangeTracker) getTLSSecretName(rule *networkingv1.IngressRule
 
 func (ict *IngressChangeTracker) fetchSSLCert(ing *networkingv1.Ingress, ns, name string) *route.CertificateSpec {
 	if ns == "" {
-		klog.Warningf("namespace is empty, assuming it's in default namespace")
-		ns = "default"
+		klog.Warningf("namespace is empty, will use Ingress's namespace")
+		ns = ing.Namespace
 	}
 
 	if name == "" {
