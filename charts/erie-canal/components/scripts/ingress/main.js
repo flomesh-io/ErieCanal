@@ -56,26 +56,26 @@
     .acceptTLS({
       certificate: (sni, cert) => (
         console.log('SNI', sni),
-        (sni && (
+        sni && ((
           Object.entries(certificates).find(
             ([k, v]) => (
               v?.isWildcardHost ? false : (k === sni)
-            )?.[1]
-          )
+            )
+          )?.[1]
           ||
           Object.entries(certificates).find(
             ([k, v]) => (
               v?.isWildcardHost ? (Boolean(v?.regex) ? v.regex.test(sni) : k === sni) : false
-            )?.[1]
-          )
-        )) || (
+            )
+          )?.[1]
+        ) || (
           config?.tls?.certificate && config?.tls?.certificate?.cert && config?.tls?.certificate?.key
             ? {
               cert: new crypto.Certificate(config.tls.certificate.cert),
               key: new crypto.PrivateKey(config.tls.certificate.key),
             }
             : undefined
-        )
+        ))
       ),
       trusted: Boolean(config?.tls?.mTLS) ? issuingCAs : undefined,
       verify: (ok, cert) => (
