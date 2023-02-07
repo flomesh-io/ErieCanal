@@ -17,6 +17,7 @@
 package config
 
 import (
+	"github.com/flomesh-io/ErieCanal/pkg/certificate"
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
@@ -35,12 +36,12 @@ type FlomeshConfigurationHandler struct {
 
 var _ ConfigEventHandler = &FlomeshConfigurationHandler{}
 
-func NewFlomeshConfigurationHandler(client client.Client, k8sApi *kube.K8sAPI, store *Store) *FlomeshConfigurationHandler {
+func NewFlomeshConfigurationHandler(client client.Client, k8sApi *kube.K8sAPI, store *Store, certMgr certificate.Manager) *FlomeshConfigurationHandler {
 	return &FlomeshConfigurationHandler{
 		configStore: store,
 		listeners: &configChangeListener{
 			meshConfig: []MeshConfigChangeListener{
-				&meshCfgChangeListenerForBasicConfig{client: client, k8sApi: k8sApi, configStore: store},
+				&meshCfgChangeListenerForBasicConfig{client: client, k8sApi: k8sApi, configStore: store, certMgr: certMgr},
 				&meshCfgChangeListenerForIngress{k8sApi: k8sApi, configStore: store},
 			},
 			//clusterConfig: []ClusterConfigChangeListener{},

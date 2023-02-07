@@ -125,7 +125,7 @@ func main() {
 	// register webhooks
 	registerToWebhookServer(mgr, k8sApi, controlPlaneConfigStore)
 
-	registerEventHandler(mgr, k8sApi, controlPlaneConfigStore)
+	registerEventHandler(mgr, k8sApi, controlPlaneConfigStore, certMgr)
 
 	// add endpoints for Liveness and Readiness check
 	addLivenessAndReadinessCheck(mgr)
