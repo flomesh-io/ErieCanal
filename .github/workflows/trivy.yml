@@ -78,7 +78,7 @@ jobs:
             type=docker,dest=erie-canal-${{ matrix.id }}.tar
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.9.0
+        uses: aquasecurity/trivy-action@0.9.1
         with:
           input: /github/workspace/erie-canal-${{ matrix.id }}.tar
           severity: 'CRITICAL,HIGH'
