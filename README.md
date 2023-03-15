@@ -14,7 +14,22 @@ In the `Locality` mode, which is the default configuration, traffic is scheduled
 
 ## Architecture
 
-![ErieCanal Architecture diagram](architecture.png)
+<br/>
+<details>
+  <summary><b>MCS Bridge - eBPF based approach (coming soon)</b> </summary>
+
+  ![mcs bridge](https://user-images.githubusercontent.com/95846930/225261112-979e89e4-1657-45a4-8286-d4507a70acbd.jpg)
+
+</details>
+<br/>
+<details>
+  <summary><b>ErieCanal + Service Mesh based approach (backward compatibility)</b> </summary>
+
+  ![ErieCanal Architecture diagram](ec-mesh-architecture.png)
+
+</details>
+<br/>
+
 
 ## Install
 
