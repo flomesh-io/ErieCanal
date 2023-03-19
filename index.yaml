@@ -341,7 +341,7 @@ entries:
           url: https://github.com/flomesh-io/ErieCanal/issues
     apiVersion: v2
     appVersion: 0.1.0-beta.1
-    created: "2023-01-05T07:08:21.882720002Z"
+    created: "2023-03-19T08:21:18.27435045Z"
     dependencies:
     - name: tpls
       repository: file://../tpls
@@ -351,7 +351,7 @@ entries:
       repository: https://charts.jetstack.io
       version: 1.7.3
     description: A Helm chart to install the ErieCanal on Kubernetes
-    digest: 639631291fce855fffcb07ff5b2b5004195a5217e560f3112719238893cf0e01
+    digest: bb0cfda851018a5fb82de8e319576c5afa2d04e1aced69b21801a22c17e58d1a
     home: https://flomesh.io
     icon: https://flomesh-io.github.io/ErieCanal/flomesh.png
     keywords:
@@ -591,9 +591,9 @@ entries:
     version: 0.1.0-beta.2
   - apiVersion: v2
     appVersion: 0.1.0-beta.1
-    created: "2023-01-05T07:08:21.882947005Z"
+    created: "2023-03-19T08:21:18.274593447Z"
     description: A Helm chart for ErieCanal templates
-    digest: 588ea3fdf5d117d8e0b90afaf88a8d109e96415957c5ba1b737e5b7ddf4d3c6e
+    digest: 2fa72d167a106d8be96ae3bfdfc34d496c0c6d0a3a15507928a09cf7d863d29f
     name: tpls
     type: library
     urls:
@@ -629,4 +629,4 @@ entries:
     urls:
     - https://flomesh-io.github.io/ErieCanal/tpls-0.1.0-alpha.1.tgz
     version: 0.1.0-alpha.1
-generated: "2023-03-19T08:20:28.136750036Z"
+generated: "2023-03-19T08:21:18.265144148Z"
