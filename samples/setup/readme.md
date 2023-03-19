@@ -44,7 +44,7 @@ Not sure what to do next? 😅  Check out https://kind.sigs.k8s.io/docs/user/qui
 
 #### Install ErieCanal to Control Plane
 ```shell
-helm install --namespace erie-canal --create-namespace --set ec.version=0.1.0-dev --set ec.logLevel=5 --set ec.serviceLB.enabled=true erie-canal charts/erie-canal/
+helm install --namespace erie-canal --create-namespace --set ec.version=0.1.3-dev --set ec.logLevel=5 --set ec.serviceLB.enabled=true erie-canal charts/erie-canal/
 ```
 
 ### Cluster 1
@@ -73,7 +73,7 @@ Not sure what to do next? 😅  Check out https://kind.sigs.k8s.io/docs/user/qui
 
 #### Install ErieCanal to Cluster1
 ```shell
-helm install --namespace erie-canal --create-namespace --set ec.version=0.1.0-dev --set ec.logLevel=5 --set ec.serviceLB.enabled=true erie-canal charts/erie-canal/
+helm install --namespace erie-canal --create-namespace --set ec.version=0.1.3-dev --set ec.logLevel=5 --set ec.serviceLB.enabled=true erie-canal charts/erie-canal/
 ```
 
 ### Cluster 2
@@ -102,7 +102,7 @@ Not sure what to do next? 😅  Check out https://kind.sigs.k8s.io/docs/user/qui
 
 #### Install ErieCanal to Cluster2
 ```shell
-helm install --namespace erie-canal --create-namespace --set ec.version=0.1.0-dev --set ec.logLevel=5 --set ec.serviceLB.enabled=true erie-canal charts/erie-canal/
+helm install --namespace erie-canal --create-namespace --set ec.version=0.1.3-dev --set ec.logLevel=5 --set ec.serviceLB.enabled=true erie-canal charts/erie-canal/
 ```
 
 ## Create/Update Cluster CRD yamls
