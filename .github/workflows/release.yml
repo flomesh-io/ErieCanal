@@ -62,7 +62,7 @@ jobs:
 
     - name: Sign image with a key - ${{ matrix.id }}
       run: |
-        cosign sign --key env://COSIGN_PRIVATE_KEY ${TAGS}
+        cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${TAGS}
       env:
         TAGS: ${{ steps.docker_meta.outputs.tags }}
         COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_PRIVATE_KEY}}
