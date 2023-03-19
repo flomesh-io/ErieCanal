@@ -146,7 +146,7 @@ func (w *IngressValidator) doValidation(obj interface{}) error {
 	trustedCASecret := ing.Annotations[ingresspipy.PipyIngressAnnotationTLSTrustedCASecret]
 	if trustedCASecret != "" {
 		if err := w.secretExists(trustedCASecret, ing); err != nil {
-			return fmt.Errorf("secert %q doesn't exist: %s, please check of annotation 'pipy.ingress.kubernetes.io/tls-trusted-ca-secret' of Ingress %s/%s", trustedCASecret, err, ing.Namespace, ing.Name)
+			return fmt.Errorf("secert %q doesn't exist: %s, please check annotation 'pipy.ingress.kubernetes.io/tls-trusted-ca-secret' of Ingress %s/%s", trustedCASecret, err, ing.Namespace, ing.Name)
 		}
 	}
 
