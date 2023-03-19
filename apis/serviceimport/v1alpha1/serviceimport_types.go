@@ -153,7 +153,7 @@ type ClusterStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced
+// +kubebuilder:resource:shortName=simp,scope=Namespaced
 // +kubebuilder:printcolumn:name="Age",type="date",priority=0,JSONPath=".metadata.creationTimestamp"
 
 // ServiceImport is the Schema for the ServiceImports API
