@@ -21,16 +21,16 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
-	gwv1alpha2 "sigs.k8s.io/gateway-api/apis/v1alpha2"
+	gwv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 	gwinformerv1beta1 "sigs.k8s.io/gateway-api/pkg/client/informers/externalversions/apis/v1beta1"
 	gwlisterv1beta1 "sigs.k8s.io/gateway-api/pkg/client/listers/apis/v1beta1"
 	"time"
 )
 
 type GatewayHandler interface {
-	OnGatewayAdd(gateway *gwv1alpha2.Gateway)
-	OnGatewayUpdate(oldGateway, gateway *gwv1alpha2.Gateway)
-	OnGatewayDelete(gateway *gwv1alpha2.Gateway)
+	OnGatewayAdd(gateway *gwv1beta1.Gateway)
+	OnGatewayUpdate(oldGateway, gateway *gwv1beta1.Gateway)
+	OnGatewayDelete(gateway *gwv1beta1.Gateway)
 	OnGatewaySynced()
 }
 
@@ -46,7 +46,7 @@ type GatewayStore struct {
 	cache.Store
 }
 
-func (l *GatewayStore) ByKey(key string) (*gwv1alpha2.Gateway, error) {
+func (l *GatewayStore) ByKey(key string) (*gwv1beta1.Gateway, error) {
 	s, exists, err := l.GetByKey(key)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (l *GatewayStore) ByKey(key string) (*gwv1alpha2.Gateway, error) {
 	if !exists {
 		return nil, fmt.Errorf("no object matching key %q in local store", key)
 	}
-	return s.(*gwv1alpha2.Gateway), nil
+	return s.(*gwv1beta1.Gateway), nil
 }
 
 func NewGatewayControllerWithEventHandler(gatewayInformer gwinformerv1beta1.GatewayInformer, resyncPeriod time.Duration, handler GatewayHandler) *GatewayController {
@@ -99,7 +99,7 @@ func (c *GatewayController) Run(stopCh <-chan struct{}) {
 }
 
 func (c *GatewayController) handleAddGateway(obj interface{}) {
-	gateway, ok := obj.(*gwv1alpha2.Gateway)
+	gateway, ok := obj.(*gwv1beta1.Gateway)
 	if !ok {
 		runtime.HandleError(fmt.Errorf("unexpected object type: %v", obj))
 		return
@@ -112,12 +112,12 @@ func (c *GatewayController) handleAddGateway(obj interface{}) {
 }
 
 func (c *GatewayController) handleUpdateGateway(oldObj, newObj interface{}) {
-	oldGateway, ok := oldObj.(*gwv1alpha2.Gateway)
+	oldGateway, ok := oldObj.(*gwv1beta1.Gateway)
 	if !ok {
 		runtime.HandleError(fmt.Errorf("unexpected object type: %v", oldObj))
 		return
 	}
-	gateway, ok := newObj.(*gwv1alpha2.Gateway)
+	gateway, ok := newObj.(*gwv1beta1.Gateway)
 	if !ok {
 		runtime.HandleError(fmt.Errorf("unexpected object type: %v", newObj))
 		return
@@ -130,14 +130,14 @@ func (c *GatewayController) handleUpdateGateway(oldObj, newObj interface{}) {
 }
 
 func (c *GatewayController) handleDeleteGateway(obj interface{}) {
-	gateway, ok := obj.(*gwv1alpha2.Gateway)
+	gateway, ok := obj.(*gwv1beta1.Gateway)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
 			runtime.HandleError(fmt.Errorf("unexpected object type: %v", obj))
 			return
 		}
-		if gateway, ok = tombstone.Obj.(*gwv1alpha2.Gateway); !ok {
+		if gateway, ok = tombstone.Obj.(*gwv1beta1.Gateway); !ok {
 			runtime.HandleError(fmt.Errorf("unexpected object type: %v", obj))
 			return
 		}

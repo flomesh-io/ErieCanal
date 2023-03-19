@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	GatewayV1alpha2Controller = "flomesh.io/gateway-v1alpha2-controller"
+	GatewayController = "flomesh.io/gateway-controller"
 )
 
 type GatewayReconciler struct {
@@ -62,7 +62,7 @@ func (r *GatewayReconciler) SetupWithManager(mgr ctrl.Manager) error {
 					return false
 				}
 
-				return gatewayClass.Spec.ControllerName == GatewayV1alpha2Controller
+				return gatewayClass.Spec.ControllerName == GatewayController
 			})),
 		).
 		Complete(r)
