@@ -21,16 +21,16 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
-	gwv1alpha2 "sigs.k8s.io/gateway-api/apis/v1alpha2"
+	gwv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 	gwinformerv1beta1 "sigs.k8s.io/gateway-api/pkg/client/informers/externalversions/apis/v1beta1"
 	gwlisterv1beta1 "sigs.k8s.io/gateway-api/pkg/client/listers/apis/v1beta1"
 	"time"
 )
 
 type HTTPRouteHandler interface {
-	OnHTTPRouteAdd(httpRoute *gwv1alpha2.HTTPRoute)
-	OnHTTPRouteUpdate(oldHttpRoute, httpRoute *gwv1alpha2.HTTPRoute)
-	OnHTTPRouteDelete(httpRoute *gwv1alpha2.HTTPRoute)
+	OnHTTPRouteAdd(httpRoute *gwv1beta1.HTTPRoute)
+	OnHTTPRouteUpdate(oldHttpRoute, httpRoute *gwv1beta1.HTTPRoute)
+	OnHTTPRouteDelete(httpRoute *gwv1beta1.HTTPRoute)
 	OnHTTPRouteSynced()
 }
 
@@ -46,7 +46,7 @@ type HTTPRouteStore struct {
 	cache.Store
 }
 
-func (l *HTTPRouteStore) ByKey(key string) (*gwv1alpha2.HTTPRoute, error) {
+func (l *HTTPRouteStore) ByKey(key string) (*gwv1beta1.HTTPRoute, error) {
 	s, exists, err := l.GetByKey(key)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (l *HTTPRouteStore) ByKey(key string) (*gwv1alpha2.HTTPRoute, error) {
 	if !exists {
 		return nil, fmt.Errorf("no object matching key %q in local store", key)
 	}
-	return s.(*gwv1alpha2.HTTPRoute), nil
+	return s.(*gwv1beta1.HTTPRoute), nil
 }
 
 func NewHTTPRouteControllerWithEventHandler(httpRouteInformer gwinformerv1beta1.HTTPRouteInformer, resyncPeriod time.Duration, handler HTTPRouteHandler) *HTTPRouteController {
@@ -99,7 +99,7 @@ func (c *HTTPRouteController) Run(stopCh <-chan struct{}) {
 }
 
 func (c *HTTPRouteController) handleAddHTTPRoute(obj interface{}) {
-	httpRoute, ok := obj.(*gwv1alpha2.HTTPRoute)
+	httpRoute, ok := obj.(*gwv1beta1.HTTPRoute)
 	if !ok {
 		runtime.HandleError(fmt.Errorf("unexpected object type: %v", obj))
 		return
@@ -112,12 +112,12 @@ func (c *HTTPRouteController) handleAddHTTPRoute(obj interface{}) {
 }
 
 func (c *HTTPRouteController) handleUpdateHTTPRoute(oldObj, newObj interface{}) {
-	oldHttpRoute, ok := oldObj.(*gwv1alpha2.HTTPRoute)
+	oldHttpRoute, ok := oldObj.(*gwv1beta1.HTTPRoute)
 	if !ok {
 		runtime.HandleError(fmt.Errorf("unexpected object type: %v", oldObj))
 		return
 	}
-	httpRoute, ok := newObj.(*gwv1alpha2.HTTPRoute)
+	httpRoute, ok := newObj.(*gwv1beta1.HTTPRoute)
 	if !ok {
 		runtime.HandleError(fmt.Errorf("unexpected object type: %v", newObj))
 		return
@@ -130,14 +130,14 @@ func (c *HTTPRouteController) handleUpdateHTTPRoute(oldObj, newObj interface{}) 
 }
 
 func (c *HTTPRouteController) handleDeleteHTTPRoute(obj interface{}) {
-	httpRoute, ok := obj.(*gwv1alpha2.HTTPRoute)
+	httpRoute, ok := obj.(*gwv1beta1.HTTPRoute)
 	if !ok {
 		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
 		if !ok {
 			runtime.HandleError(fmt.Errorf("unexpected object type: %v", obj))
 			return
 		}
-		if httpRoute, ok = tombstone.Obj.(*gwv1alpha2.HTTPRoute); !ok {
+		if httpRoute, ok = tombstone.Obj.(*gwv1beta1.HTTPRoute); !ok {
 			runtime.HandleError(fmt.Errorf("unexpected object type: %v", obj))
 			return
 		}

@@ -33,12 +33,8 @@ import (
 	httproutewh "github.com/flomesh-io/ErieCanal/pkg/webhooks/httproute"
 	ingwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/ingress"
 	idwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/namespacedingress"
-	referencepolicywh "github.com/flomesh-io/ErieCanal/pkg/webhooks/referencepolicy"
 	svcexpwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/serviceexport"
 	svcimpwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/serviceimport"
-	tcproutewh "github.com/flomesh-io/ErieCanal/pkg/webhooks/tcproute"
-	tlsroutewh "github.com/flomesh-io/ErieCanal/pkg/webhooks/tlsroute"
-	udproutewh "github.com/flomesh-io/ErieCanal/pkg/webhooks/udproute"
 	"io/ioutil"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -241,43 +237,11 @@ func registerGatewayApiToWebhookServer(mgr manager.Manager, api *kube.K8sAPI, co
 		webhooks.ValidatingWebhookFor(gatewayclasswh.NewValidator(api)),
 	)
 
-	// ReferencePolicy
-	hookServer.Register(commons.ReferencePolicyMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(referencepolicywh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.ReferencePolicyValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(referencepolicywh.NewValidator(api)),
-	)
-
 	// HTTPRoute
 	hookServer.Register(commons.HTTPRouteMutatingWebhookPath,
 		webhooks.DefaultingWebhookFor(httproutewh.NewDefaulter(api, controlPlaneConfigStore)),
 	)
 	hookServer.Register(commons.HTTPRouteValidatingWebhookPath,
 		webhooks.ValidatingWebhookFor(httproutewh.NewValidator(api)),
-	)
-
-	// TCPRoute
-	hookServer.Register(commons.TCPRouteMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(tcproutewh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.TCPRouteValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(tcproutewh.NewValidator(api)),
-	)
-
-	// TLSRoute
-	hookServer.Register(commons.TLSRouteMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(tlsroutewh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.TLSRouteValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(tlsroutewh.NewValidator(api)),
-	)
-
-	// UDPRoute
-	hookServer.Register(commons.UDPRouteMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(udproutewh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.UDPRouteValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(udproutewh.NewValidator(api)),
 	)
 }

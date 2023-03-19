@@ -228,8 +228,8 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v4.5.6
-HELM_VERSION ?= v3.10.3
-CONTROLLER_TOOLS_VERSION ?= v0.11.1
+HELM_VERSION ?= v3.11.1
+CONTROLLER_TOOLS_VERSION ?= v0.11.3
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize

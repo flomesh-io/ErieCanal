@@ -42,9 +42,5 @@ func RegisterWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
 func RegisterGatewayApiWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
 	gateway.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
 	gatewayclass.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
-	//referencepolicy.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
 	httproute.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
-	//tcproute.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
-	//tlsroute.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
-	//udproute.RegisterWebhooks(webhookSvcNs, webhookSvcName, caBundle)
 }
