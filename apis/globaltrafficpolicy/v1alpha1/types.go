@@ -54,7 +54,7 @@ type GlobalTrafficPolicyStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced
+// +kubebuilder:resource:shortName=gtp,scope=Namespaced
 // +kubebuilder:printcolumn:name="LB Type",type="string",priority=0,JSONPath=".spec.lbType"
 // +kubebuilder:printcolumn:name="Age",type="date",priority=0,JSONPath=".metadata.creationTimestamp"
 
