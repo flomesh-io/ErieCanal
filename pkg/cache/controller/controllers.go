@@ -18,7 +18,6 @@ package controller
 
 import (
 	"github.com/flomesh-io/ErieCanal/pkg/controller"
-	gwcontrollerv1alpha2 "github.com/flomesh-io/ErieCanal/pkg/controller/gateway/v1alpha2"
 	gwcontrollerv1beta1 "github.com/flomesh-io/ErieCanal/pkg/controller/gateway/v1beta1"
 )
 
@@ -44,19 +43,11 @@ type RemoteControllers struct {
 var _ Controllers = &RemoteControllers{}
 
 type GatewayApiControllers struct {
-	V1beta1  *GatewayApiV1beta1Controllers
-	V1alpha2 *GatewayApiV1alpha2Controllers
+	V1beta1 *GatewayApiV1beta1Controllers
 }
 
 type GatewayApiV1beta1Controllers struct {
 	Gateway      *gwcontrollerv1beta1.GatewayController
 	GatewayClass *gwcontrollerv1beta1.GatewayClassController
 	HTTPRoute    *gwcontrollerv1beta1.HTTPRouteController
-}
-
-type GatewayApiV1alpha2Controllers struct {
-	ReferencePolicy *gwcontrollerv1alpha2.ReferencePolicyController
-	TCPRoute        *gwcontrollerv1alpha2.TCPRouteController
-	TLSRoute        *gwcontrollerv1alpha2.TLSRouteController
-	UDPRoute        *gwcontrollerv1alpha2.UDPRouteController
 }

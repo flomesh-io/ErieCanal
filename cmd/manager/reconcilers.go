@@ -130,16 +130,6 @@ func registerGatewayAPIs(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConf
 		os.Exit(1)
 	}
 
-	//if err := (&gatewayv1alpha2.ReferencePolicyReconciler{
-	//	Client:   mgr.GetClient(),
-	//	Scheme:   mgr.GetScheme(),
-	//	Recorder: mgr.GetEventRecorderFor("ReferencePolicy"),
-	//	K8sAPI:   api,
-	//}).SetupWithManager(mgr); err != nil {
-	//	klog.Fatal(err, "unable to create controller", "controller", "ReferencePolicy")
-	//	os.Exit(1)
-	//}
-
 	if err := (&gatewayv1beta1.HTTPRouteReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
@@ -149,36 +139,6 @@ func registerGatewayAPIs(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConf
 		klog.Fatal(err, "unable to create controller", "controller", "HTTPRoute")
 		os.Exit(1)
 	}
-
-	//if err := (&gatewayv1alpha2.TLSRouteReconciler{
-	//	Client:   mgr.GetClient(),
-	//	Scheme:   mgr.GetScheme(),
-	//	Recorder: mgr.GetEventRecorderFor("TLSRoute"),
-	//	K8sAPI:   api,
-	//}).SetupWithManager(mgr); err != nil {
-	//	klog.Fatal(err, "unable to create controller", "controller", "TLSRoute")
-	//	os.Exit(1)
-	//}
-	//
-	//if err := (&gatewayv1alpha2.TCPRouteReconciler{
-	//	Client:   mgr.GetClient(),
-	//	Scheme:   mgr.GetScheme(),
-	//	Recorder: mgr.GetEventRecorderFor("TCPRoute"),
-	//	K8sAPI:   api,
-	//}).SetupWithManager(mgr); err != nil {
-	//	klog.Fatal(err, "unable to create controller", "controller", "TCPRoute")
-	//	os.Exit(1)
-	//}
-	//
-	//if err := (&gatewayv1alpha2.UDPRouteReconciler{
-	//	Client:   mgr.GetClient(),
-	//	Scheme:   mgr.GetScheme(),
-	//	Recorder: mgr.GetEventRecorderFor("UDPRoute"),
-	//	K8sAPI:   api,
-	//}).SetupWithManager(mgr); err != nil {
-	//	klog.Fatal(err, "unable to create controller", "controller", "UDPRoute")
-	//	os.Exit(1)
-	//}
 }
 
 func registerServiceLB(mgr manager.Manager, api *kube.K8sAPI, store *config.Store) {
