@@ -1,10 +1,11 @@
 # syntax = docker/dockerfile:1.4
-ARG TARGETOS
-ARG TARGETARCH
 ARG DISTROLESS_TAG
 
 # Build the manager binary
 FROM --platform=$BUILDPLATFORM golang:1.19 as builder
+
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -21,6 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH make build/manager
 
+# Build the final image
 FROM gcr.io/distroless/static-debian11:$DISTROLESS_TAG
 WORKDIR /
 COPY --from=builder /workspace/bin/manager .
