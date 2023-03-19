@@ -116,7 +116,7 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced
+// +kubebuilder:resource:shortName=sexp,scope=Namespaced
 // +kubebuilder:printcolumn:name="Valid",type="string",priority=0,JSONPath=".status.conditions[?(@.type=='Valid')].status"
 // +kubebuilder:printcolumn:name="Conflict",type="string",priority=0,JSONPath=".status.conditions[?(@.type=='Conflict')].status"
 // +kubebuilder:printcolumn:name="Age",type="date",priority=0,JSONPath=".metadata.creationTimestamp"
