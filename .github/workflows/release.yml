@@ -63,7 +63,7 @@ jobs:
 
     - name: Sign image with a key - ${{ matrix.id }}
       run: |
-        cosign sign --key env://COSIGN_PRIVATE_KEY flomesh/erie-canal-${{ matrix.id }}@${IMAGE_DIGEST}
+        cosign sign --yes --key env://COSIGN_PRIVATE_KEY flomesh/erie-canal-${{ matrix.id }}@${IMAGE_DIGEST}
       env:
         TAGS: ${{ steps.docker_meta.outputs.tags }}
         IMAGE_DIGEST: ${{ steps.docker_build_push.outputs.digest }}
