@@ -1,4 +1,4 @@
-{{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if and .Values.ec.ingress.enabled (not .Values.ec.gatewayApi.enabled ) (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
 {{- if not .Values.ec.repo.preProvision.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress

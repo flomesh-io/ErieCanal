@@ -22,8 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
-	ctrlruntimecache "sigs.k8s.io/controller-runtime/pkg/cache"
-	"time"
 )
 
 type ConfigEventHandler interface {
@@ -92,7 +90,7 @@ func (c *flomeshConfigurationHanlder) handleDeleteConfigMap(obj interface{}) {
 	c.handler.OnConfigMapDelete(configmap)
 }
 
-func RegisterConfigurationHanlder(handler ConfigEventHandler, configmapInformer ctrlruntimecache.Informer, resyncPeriod time.Duration) {
+func NewConfigurationHandler(handler ConfigEventHandler) cache.ResourceEventHandler {
 	internalHandler := &flomeshConfigurationHanlder{
 		handler: handler,
 	}
@@ -108,7 +106,7 @@ func RegisterConfigurationHanlder(handler ConfigEventHandler, configmapInformer 
 		Handler:    configMapEventHandler,
 	}
 
-	configmapInformer.AddEventHandlerWithResyncPeriod(filteringResourceEventHandler, resyncPeriod)
+	return filteringResourceEventHandler
 }
 
 func DefaultConfigurationFilter(obj interface{}) bool {

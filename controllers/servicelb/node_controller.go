@@ -19,12 +19,10 @@ package servicelb
 import (
 	"context"
 	_ "embed"
-	"github.com/flomesh-io/ErieCanal/pkg/config"
-	"github.com/flomesh-io/ErieCanal/pkg/kube"
+	"github.com/flomesh-io/ErieCanal/controllers"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -32,12 +30,16 @@ import (
 )
 
 // NodeReconciler reconciles a Node object
-type NodeReconciler struct {
-	client.Client
-	K8sAPI                  *kube.K8sAPI
-	Scheme                  *runtime.Scheme
-	Recorder                record.EventRecorder
-	ControlPlaneConfigStore *config.Store
+type nodeReconciler struct {
+	recorder record.EventRecorder
+	cfg      *controllers.ReconcilerConfig
+}
+
+func NewNodeReconciler(rc *controllers.ReconcilerConfig) controllers.Reconciler {
+	return &nodeReconciler{
+		recorder: rc.Manager.GetEventRecorderFor("ServiceLB"),
+		cfg:      rc,
+	}
 }
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -49,10 +51,10 @@ type NodeReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
-func (r *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *nodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// Fetch the Node instance
 	node := &corev1.Node{}
-	if err := r.Get(
+	if err := r.cfg.Client.Get(
 		ctx,
 		req.NamespacedName,
 		node,
@@ -80,11 +82,11 @@ func (r *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	return ctrl.Result{}, nil
 }
 
-func (r *NodeReconciler) updateDaemonSets(ctx context.Context) error {
+func (r *nodeReconciler) updateDaemonSets(ctx context.Context) error {
 	klog.V(5).Infof("Updating DaemonSets due to node labels change ...")
 
 	daemonsets := &appv1.DaemonSetList{}
-	if err := r.List(
+	if err := r.cfg.Client.List(
 		ctx,
 		daemonsets,
 		client.InNamespace(corev1.NamespaceAll),
@@ -100,7 +102,7 @@ func (r *NodeReconciler) updateDaemonSets(ctx context.Context) error {
 			daemonsetNodeLabel: "true",
 		}
 		ds.Labels[nodeSelectorLabel] = "true"
-		if err := r.Update(ctx, &ds); err != nil {
+		if err := r.cfg.Client.Update(ctx, &ds); err != nil {
 			return err
 		}
 	}
@@ -109,7 +111,7 @@ func (r *NodeReconciler) updateDaemonSets(ctx context.Context) error {
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *NodeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *nodeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Node{}).
 		Complete(r)

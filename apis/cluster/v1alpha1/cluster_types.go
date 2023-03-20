@@ -30,10 +30,6 @@ type ClusterSpec struct {
 	// +kubebuilder:default=false
 	// +optional
 
-	// IsInCluster, it indicates the Cluster resource is used for connecting local cluster
-	//  or a remote cluster.
-	IsInCluster bool `json:"isInCluster"`
-
 	// +kubebuilder:default=default
 	// +optional
 

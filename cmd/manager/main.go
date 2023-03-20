@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
-	"github.com/flomesh-io/ErieCanal/pkg/event"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
+	mcsevent "github.com/flomesh-io/ErieCanal/pkg/mcs/event"
 	"github.com/flomesh-io/ErieCanal/pkg/repo"
 	"github.com/flomesh-io/ErieCanal/pkg/util"
 	"github.com/flomesh-io/ErieCanal/pkg/util/tls"
@@ -47,7 +47,6 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	gwschema "sigs.k8s.io/gateway-api/pkg/client/clientset/versioned/scheme"
 	//+kubebuilder:scaffold:imports
 )
@@ -102,37 +101,50 @@ func main() {
 
 	// upload init scripts to pipy repo
 	repoClient := repo.NewRepoClient(mc.RepoRootURL())
-	initRepo(repoClient)
-
-	// setup HTTP
-	setupHTTP(repoClient, mc)
-
-	// setup TLS config
-	setupTLS(certMgr, repoClient, mc)
-
 	// create a new manager for controllers
 	mgr := newManager(kubeconfig, options)
-
 	stopCh := util.RegisterOSExitHandlers()
-	broker := event.NewBroker(stopCh)
+	broker := mcsevent.NewBroker(stopCh)
 
-	// create mutating and validating webhook configurations
-	createWebhookConfigurations(k8sApi, controlPlaneConfigStore, certMgr)
+	managerCfg := &ManagerConfig{
+		manager:            mgr,
+		k8sAPI:             k8sApi,
+		configStore:        controlPlaneConfigStore,
+		certificateManager: certMgr,
+		repoClient:         repoClient,
+		broker:             broker,
+		stopCh:             stopCh,
+	}
 
-	// register Reconcilers
-	registerReconcilers(mgr, k8sApi, controlPlaneConfigStore, certMgr, broker)
+	if mc.IsIngressEnabled() {
+		managerCfg.connector = managerCfg.GetLocalConnector()
+	}
 
-	// register webhooks
-	registerToWebhookServer(mgr, k8sApi, controlPlaneConfigStore)
+	if mc.IsGatewayApiEnabled() {
+		if !version.IsSupportedK8sVersionForGatewayAPI(k8sApi) {
+			klog.Errorf("kubernetes server version %s is not supported, requires at least %s",
+				version.ServerVersion.String(), version.MinK8sVersionForGatewayAPI.String())
+			os.Exit(1)
+		}
 
-	registerEventHandler(mgr, k8sApi, controlPlaneConfigStore, certMgr)
+		managerCfg.eventHandler = managerCfg.GetResourceEventHandler()
+	}
 
-	// add endpoints for Liveness and Readiness check
-	addLivenessAndReadinessCheck(mgr)
-	//+kubebuilder:scaffold:builder
-
-	// start the controller manager
-	startManager(mgr, mc)
+	for _, f := range []func() error{
+		managerCfg.InitRepo,
+		managerCfg.SetupHTTP,
+		managerCfg.SetupTLS,
+		managerCfg.RegisterWebHooks,
+		managerCfg.RegisterEventHandlers,
+		managerCfg.RegisterReconcilers,
+		managerCfg.AddLivenessAndReadinessCheck,
+		managerCfg.StartManager,
+	} {
+		if err := f(); err != nil {
+			klog.Errorf("Failed to startup: %s", err)
+			os.Exit(1)
+		}
+	}
 }
 
 func processFlags() *startArgs {
@@ -198,30 +210,26 @@ func getClusterUID(api *kube.K8sAPI) string {
 	return string(ns.UID)
 }
 
-func addLivenessAndReadinessCheck(mgr manager.Manager) {
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		klog.Error(err, "unable to set up health check")
-		os.Exit(1)
+func (c *ManagerConfig) StartManager() error {
+	if c.connector != nil {
+		if err := c.manager.Add(manager.RunnableFunc(func(ctx context.Context) error {
+			return c.connector.Run(c.stopCh)
+		})); err != nil {
+			return err
+		}
 	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		klog.Error(err, "unable to set up ready check")
-		os.Exit(1)
-	}
-}
 
-func startManager(mgr manager.Manager, mc *config.MeshConfig) {
-	//err := mgr.Add(manager.RunnableFunc(func(context.Context) error {
-	//	aggregatorAddr := fmt.Sprintf(":%s", mc.AggregatorPort())
-	//	return aggregator.NewAggregator(aggregatorAddr, mc.RepoAddr()).Run()
-	//}))
-	//if err != nil {
-	//	klog.Error(err, "unable add aggregator server to the manager")
-	//	os.Exit(1)
-	//}
+	if c.eventHandler != nil {
+		if err := c.manager.Add(c.eventHandler); err != nil {
+			return err
+		}
+	}
 
 	klog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		klog.Fatalf("problem running manager, %s", err.Error())
-		os.Exit(1)
+	if err := c.manager.Start(ctrl.SetupSignalHandler()); err != nil {
+		klog.Fatalf("problem running manager, %s", err)
+		return err
 	}
+
+	return nil
 }

@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH make build/ingress-pipy
 
 # Build the final image
-FROM flomesh/pipy:0.90.0-18-$DISTROLESS_TAG
+FROM flomesh/pipy:0.90.0-123-$DISTROLESS_TAG
 WORKDIR /
 COPY --from=builder /workspace/bin/ingress-pipy .
 

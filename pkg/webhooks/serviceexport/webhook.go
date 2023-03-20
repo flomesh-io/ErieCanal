@@ -22,71 +22,73 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks"
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"net/http"
 )
 
-const (
-	kind      = "ServiceExport"
-	groups    = "flomesh.io"
-	resources = "serviceexports"
-	versions  = "v1alpha1"
-
-	mwPath = commons.ServiceExportMutatingWebhookPath
-	mwName = "mserviceexport.kb.flomesh.io"
-	vwPath = commons.ServiceExportValidatingWebhookPath
-	vwName = "vserviceexport.kb.flomesh.io"
-)
-
-func RegisterWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
-	rule := flomeshadmission.NewRule(
-		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
-		[]string{groups},
-		[]string{versions},
-		[]string{resources},
-	)
-
-	mutatingWebhook := flomeshadmission.NewMutatingWebhook(
-		mwName,
-		webhookSvcNs,
-		webhookSvcName,
-		mwPath,
-		caBundle,
-		nil,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	validatingWebhook := flomeshadmission.NewValidatingWebhook(
-		vwName,
-		webhookSvcNs,
-		webhookSvcName,
-		vwPath,
-		caBundle,
-		nil,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	flomeshadmission.RegisterMutatingWebhook(mwName, mutatingWebhook)
-	flomeshadmission.RegisterValidatingWebhook(vwName, validatingWebhook)
+type register struct {
+	*webhooks.RegisterConfig
 }
 
-type ServiceExportDefaulter struct {
+func NewRegister(cfg *webhooks.RegisterConfig) webhooks.Register {
+	return &register{
+		RegisterConfig: cfg,
+	}
+}
+
+func (r *register) GetWebhooks() ([]admissionregv1.MutatingWebhook, []admissionregv1.ValidatingWebhook) {
+	rule := flomeshadmission.NewRule(
+		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
+		[]string{"flomesh.io"},
+		[]string{"v1alpha1"},
+		[]string{"serviceexports"},
+	)
+
+	return []admissionregv1.MutatingWebhook{flomeshadmission.NewMutatingWebhook(
+			"mserviceexport.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.ServiceExportMutatingWebhookPath,
+			r.CaBundle,
+			nil,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}, []admissionregv1.ValidatingWebhook{flomeshadmission.NewValidatingWebhook(
+			"vserviceexport.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.ServiceExportValidatingWebhookPath,
+			r.CaBundle,
+			nil,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}
+}
+
+func (r *register) GetHandlers() map[string]http.Handler {
+	return map[string]http.Handler{
+		commons.ServiceExportMutatingWebhookPath:   webhooks.DefaultingWebhookFor(newDefaulter(r.K8sAPI, r.ConfigStore)),
+		commons.ServiceExportValidatingWebhookPath: webhooks.ValidatingWebhookFor(newValidator(r.K8sAPI)),
+	}
+}
+
+type defaulter struct {
 	k8sAPI      *kube.K8sAPI
 	configStore *config.Store
 }
 
-func NewDefaulter(k8sAPI *kube.K8sAPI, configStore *config.Store) *ServiceExportDefaulter {
-	return &ServiceExportDefaulter{
+func newDefaulter(k8sAPI *kube.K8sAPI, configStore *config.Store) *defaulter {
+	return &defaulter{
 		k8sAPI:      k8sAPI,
 		configStore: configStore,
 	}
 }
 
-func (w *ServiceExportDefaulter) RuntimeObject() runtime.Object {
+func (w *defaulter) RuntimeObject() runtime.Object {
 	return &svcexpv1alpha1.ServiceExport{}
 }
 
-func (w *ServiceExportDefaulter) SetDefaults(obj interface{}) {
+func (w *defaulter) SetDefaults(obj interface{}) {
 	//serviceExport, ok := obj.(*svcexpv1alpha1.ServiceExport)
 	//if !ok {
 	//	return
@@ -104,28 +106,28 @@ func (w *ServiceExportDefaulter) SetDefaults(obj interface{}) {
 	//klog.V(4).Infof("After setting default values, spec=%#v", serviceExport.Spec)
 }
 
-type ServiceExportValidator struct {
+type validator struct {
 	k8sAPI *kube.K8sAPI
 }
 
-func (w *ServiceExportValidator) RuntimeObject() runtime.Object {
+func (w *validator) RuntimeObject() runtime.Object {
 	return &svcexpv1alpha1.ServiceExport{}
 }
 
-func (w *ServiceExportValidator) ValidateCreate(obj interface{}) error {
+func (w *validator) ValidateCreate(obj interface{}) error {
 	return doValidation(obj)
 }
 
-func (w *ServiceExportValidator) ValidateUpdate(oldObj, obj interface{}) error {
+func (w *validator) ValidateUpdate(oldObj, obj interface{}) error {
 	return doValidation(obj)
 }
 
-func (w *ServiceExportValidator) ValidateDelete(obj interface{}) error {
+func (w *validator) ValidateDelete(obj interface{}) error {
 	return nil
 }
 
-func NewValidator(k8sAPI *kube.K8sAPI) *ServiceExportValidator {
-	return &ServiceExportValidator{
+func newValidator(k8sAPI *kube.K8sAPI) *validator {
+	return &validator{
 		k8sAPI: k8sAPI,
 	}
 }

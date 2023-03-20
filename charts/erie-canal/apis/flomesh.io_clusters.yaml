@@ -76,11 +76,6 @@ spec:
                 default: default
                 description: Group, the locality information of this cluster
                 type: string
-              isInCluster:
-                default: false
-                description: IsInCluster, it indicates the Cluster resource is used
-                  for connecting local cluster or a remote cluster.
-                type: boolean
               kubeconfig:
                 description: Kubeconfig, The kubeconfig of the cluster you want to
                   connnect to This's not needed if ClusterMode is InCluster, it will

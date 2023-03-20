@@ -22,7 +22,7 @@ jobs:
     runs-on: "ubuntu-22.04"
     strategy:
       matrix:
-        id: [ "manager", "proxy-init", "ingress-pipy" ]
+        id: [ "manager", "proxy-init", "ingress-pipy", "gateway" ]
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2.1.0

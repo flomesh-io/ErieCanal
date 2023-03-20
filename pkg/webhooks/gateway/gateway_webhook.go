@@ -22,74 +22,76 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/config"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/flomesh-io/ErieCanal/pkg/util"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks"
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
+	"net/http"
 	gwv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 	gwv1beta1validation "sigs.k8s.io/gateway-api/apis/v1beta1/validation"
 )
 
-const (
-	kind      = "Gateway"
-	groups    = "gateway.networking.k8s.io"
-	resources = "gateways"
-	versions  = "v1beta1"
-
-	mwPath = commons.GatewayMutatingWebhookPath
-	mwName = "mgateway.kb.flomesh.io"
-	vwPath = commons.GatewayValidatingWebhookPath
-	vwName = "vgateway.kb.flomesh.io"
-)
-
-func RegisterWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
-	rule := flomeshadmission.NewRule(
-		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
-		[]string{groups},
-		[]string{versions},
-		[]string{resources},
-	)
-
-	mutatingWebhook := flomeshadmission.NewMutatingWebhook(
-		mwName,
-		webhookSvcNs,
-		webhookSvcName,
-		mwPath,
-		caBundle,
-		nil,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	validatingWebhook := flomeshadmission.NewValidatingWebhook(
-		vwName,
-		webhookSvcNs,
-		webhookSvcName,
-		vwPath,
-		caBundle,
-		nil,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	flomeshadmission.RegisterMutatingWebhook(mwName, mutatingWebhook)
-	flomeshadmission.RegisterValidatingWebhook(vwName, validatingWebhook)
+type register struct {
+	*webhooks.RegisterConfig
 }
 
-type GatewayDefaulter struct {
+func NewRegister(cfg *webhooks.RegisterConfig) webhooks.Register {
+	return &register{
+		RegisterConfig: cfg,
+	}
+}
+
+func (r *register) GetWebhooks() ([]admissionregv1.MutatingWebhook, []admissionregv1.ValidatingWebhook) {
+	rule := flomeshadmission.NewRule(
+		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
+		[]string{"gateway.networking.k8s.io"},
+		[]string{"v1beta1"},
+		[]string{"gateways"},
+	)
+
+	return []admissionregv1.MutatingWebhook{flomeshadmission.NewMutatingWebhook(
+			"mgateway.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.GatewayMutatingWebhookPath,
+			r.CaBundle,
+			nil,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}, []admissionregv1.ValidatingWebhook{flomeshadmission.NewValidatingWebhook(
+			"vgateway.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.GatewayValidatingWebhookPath,
+			r.CaBundle,
+			nil,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}
+}
+
+func (r *register) GetHandlers() map[string]http.Handler {
+	return map[string]http.Handler{
+		commons.GatewayMutatingWebhookPath:   webhooks.DefaultingWebhookFor(newDefaulter(r.K8sAPI, r.ConfigStore)),
+		commons.GatewayValidatingWebhookPath: webhooks.ValidatingWebhookFor(newValidator(r.K8sAPI)),
+	}
+}
+
+type defaulter struct {
 	k8sAPI      *kube.K8sAPI
 	configStore *config.Store
 }
 
-func NewDefaulter(k8sAPI *kube.K8sAPI, configStore *config.Store) *GatewayDefaulter {
-	return &GatewayDefaulter{
+func newDefaulter(k8sAPI *kube.K8sAPI, configStore *config.Store) *defaulter {
+	return &defaulter{
 		k8sAPI:      k8sAPI,
 		configStore: configStore,
 	}
 }
 
-func (w *GatewayDefaulter) RuntimeObject() runtime.Object {
+func (w *defaulter) RuntimeObject() runtime.Object {
 	return &gwv1beta1.Gateway{}
 }
 
-func (w *GatewayDefaulter) SetDefaults(obj interface{}) {
+func (w *defaulter) SetDefaults(obj interface{}) {
 	gateway, ok := obj.(*gwv1beta1.Gateway)
 	if !ok {
 		return
@@ -107,28 +109,28 @@ func (w *GatewayDefaulter) SetDefaults(obj interface{}) {
 	klog.V(4).Infof("After setting default values, spec=%#v", gateway.Spec)
 }
 
-type GatewayValidator struct {
+type validator struct {
 	k8sAPI *kube.K8sAPI
 }
 
-func (w *GatewayValidator) RuntimeObject() runtime.Object {
+func (w *validator) RuntimeObject() runtime.Object {
 	return &gwv1beta1.Gateway{}
 }
 
-func (w *GatewayValidator) ValidateCreate(obj interface{}) error {
+func (w *validator) ValidateCreate(obj interface{}) error {
 	return doValidation(obj)
 }
 
-func (w *GatewayValidator) ValidateUpdate(oldObj, obj interface{}) error {
+func (w *validator) ValidateUpdate(oldObj, obj interface{}) error {
 	return doValidation(obj)
 }
 
-func (w *GatewayValidator) ValidateDelete(obj interface{}) error {
+func (w *validator) ValidateDelete(obj interface{}) error {
 	return nil
 }
 
-func NewValidator(k8sAPI *kube.K8sAPI) *GatewayValidator {
-	return &GatewayValidator{
+func newValidator(k8sAPI *kube.K8sAPI) *validator {
+	return &validator{
 		k8sAPI: k8sAPI,
 	}
 }

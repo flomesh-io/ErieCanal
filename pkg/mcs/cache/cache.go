@@ -1,0 +1,128 @@
+/*
+ * Copyright 2022 The flomesh.io Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package cache
+
+import (
+	"context"
+	"fmt"
+	"github.com/flomesh-io/ErieCanal/pkg/config"
+	ecinformers "github.com/flomesh-io/ErieCanal/pkg/generated/informers/externalversions"
+	"github.com/flomesh-io/ErieCanal/pkg/kube"
+	mcscfg "github.com/flomesh-io/ErieCanal/pkg/mcs/config"
+	conn "github.com/flomesh-io/ErieCanal/pkg/mcs/context"
+	"github.com/flomesh-io/ErieCanal/pkg/mcs/controller"
+	mcsevent "github.com/flomesh-io/ErieCanal/pkg/mcs/event"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/events"
+	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/util/async"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+)
+
+type Cache struct {
+	connectorConfig *mcscfg.ConnectorConfig
+	k8sAPI          *kube.K8sAPI
+	recorder        events.EventRecorder
+	clusterCfg      *config.Store
+	broker          *mcsevent.Broker
+
+	mu sync.Mutex
+
+	serviceExportSynced bool
+	initialized         int32
+	syncRunner          *async.BoundedFrequencyRunner
+
+	controllers *controller.Controllers
+	broadcaster events.EventBroadcaster
+}
+
+func NewCache(ctx context.Context, api *kube.K8sAPI, clusterCfg *config.Store, broker *mcsevent.Broker, resyncPeriod time.Duration) *Cache {
+	connectorCtx := ctx.(*conn.ConnectorContext)
+	key := connectorCtx.ClusterKey
+	formattedKey := strings.ReplaceAll(key, "/", "-")
+	klog.Infof("Creating cache for Cluster [%s] ...", key)
+
+	eventBroadcaster := events.NewBroadcaster(&events.EventSinkImpl{Interface: api.Client.EventsV1()})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, fmt.Sprintf("erie-canal-cluster-connector-remote-%s", formattedKey))
+
+	c := &Cache{
+		connectorConfig: connectorCtx.ConnectorConfig,
+		k8sAPI:          api,
+		recorder:        recorder,
+		clusterCfg:      clusterCfg,
+		broadcaster:     eventBroadcaster,
+		broker:          broker,
+	}
+
+	ecInformerFactory := ecinformers.NewSharedInformerFactoryWithOptions(api.FlomeshClient, resyncPeriod)
+	serviceExportController := controller.NewServiceExportControllerWithEventHandler(
+		ecInformerFactory.Serviceexport().V1alpha1().ServiceExports(),
+		resyncPeriod,
+		c,
+	)
+
+	c.controllers = &controller.Controllers{
+		ServiceExport: serviceExportController,
+	}
+
+	minSyncPeriod := 3 * time.Second
+	syncPeriod := 30 * time.Second
+	burstSyncs := 2
+	runnerName := fmt.Sprintf("sync-runner-%s", formattedKey)
+	c.syncRunner = async.NewBoundedFrequencyRunner(runnerName, c.syncManagedCluster, minSyncPeriod, syncPeriod, burstSyncs)
+
+	return c
+}
+
+func (c *Cache) setInitialized(value bool) {
+	var initialized int32
+	if value {
+		initialized = 1
+	}
+	atomic.StoreInt32(&c.initialized, initialized)
+}
+
+func (c *Cache) syncManagedCluster() {
+	// Nothing to do for the time-being
+
+	//c.mu.Lock()
+	//defer c.mu.Unlock()
+	klog.Infof("[%s] Syncing resources of managed clusters ...", c.connectorConfig.Key())
+}
+
+func (c *Cache) Sync() {
+	c.syncRunner.Run()
+}
+
+func (c *Cache) SyncLoop(stopCh <-chan struct{}) {
+	c.syncRunner.Loop(stopCh)
+}
+
+func (c *Cache) GetBroadcaster() events.EventBroadcaster {
+	return c.broadcaster
+}
+
+func (c *Cache) GetControllers() *controller.Controllers {
+	return c.controllers
+}
+
+func (c *Cache) GetRecorder() events.EventRecorder {
+	return c.recorder
+}

@@ -56,7 +56,7 @@
             new Message({
               "status": 403,
               "headers": {
-                "Server": "pipy/0.70.0"
+                "Server": "pipy/0.90.0"
               }
             }, 'Forbidden')
           )

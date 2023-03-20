@@ -17,32 +17,33 @@
 package main
 
 import (
-	"github.com/flomesh-io/ErieCanal/pkg/certificate"
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
-	"github.com/flomesh-io/ErieCanal/pkg/repo"
 	"k8s.io/klog/v2"
-	"os"
 )
 
-func setupTLS(certMgr certificate.Manager, repoClient *repo.PipyRepoClient, mc *config.MeshConfig) {
+func (c *ManagerConfig) SetupTLS() error {
+	mc := c.configStore.MeshConfig.GetConfig()
 	klog.V(5).Infof("mc.Ingress.TLS=%#v", mc.Ingress.TLS)
+
 	if mc.Ingress.TLS.Enabled {
 		if mc.Ingress.TLS.SSLPassthrough.Enabled {
 			// SSL Passthrough
 			if err := config.UpdateSSLPassthrough(
 				commons.DefaultIngressBasePath,
-				repoClient,
+				c.repoClient,
 				mc.Ingress.TLS.SSLPassthrough.Enabled,
 				mc.Ingress.TLS.SSLPassthrough.UpstreamPort,
 			); err != nil {
-				os.Exit(1)
+				return err
 			}
 		} else {
 			// TLS Offload
-			if err := config.IssueCertForIngress(commons.DefaultIngressBasePath, repoClient, certMgr, mc); err != nil {
-				os.Exit(1)
+			if err := config.IssueCertForIngress(commons.DefaultIngressBasePath, c.repoClient, c.certificateManager, mc); err != nil {
+				return err
 			}
 		}
 	}
+
+	return nil
 }

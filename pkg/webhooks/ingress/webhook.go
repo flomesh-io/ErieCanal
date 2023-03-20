@@ -24,71 +24,73 @@ import (
 	ingresspipy "github.com/flomesh-io/ErieCanal/pkg/ingress"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/flomesh-io/ErieCanal/pkg/util"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks"
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"net/http"
 )
 
-const (
-	kind      = "Ingress"
-	groups    = "networking.k8s.io"
-	resources = "ingresses"
-	versions  = "v1"
-
-	mwPath = commons.IngressMutatingWebhookPath
-	mwName = "mingress.kb.flomesh.io"
-	vwPath = commons.IngressValidatingWebhookPath
-	vwName = "vingress.kb.flomesh.io"
-)
-
-func RegisterWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
-	rule := flomeshadmission.NewRule(
-		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
-		[]string{groups},
-		[]string{versions},
-		[]string{resources},
-	)
-
-	mutatingWebhook := flomeshadmission.NewMutatingWebhook(
-		mwName,
-		webhookSvcNs,
-		webhookSvcName,
-		mwPath,
-		caBundle,
-		nil,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	validatingWebhook := flomeshadmission.NewValidatingWebhook(
-		vwName,
-		webhookSvcNs,
-		webhookSvcName,
-		vwPath,
-		caBundle,
-		nil,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	flomeshadmission.RegisterMutatingWebhook(mwName, mutatingWebhook)
-	flomeshadmission.RegisterValidatingWebhook(vwName, validatingWebhook)
+type register struct {
+	*webhooks.RegisterConfig
 }
 
-type IngressDefaulter struct {
+func NewRegister(cfg *webhooks.RegisterConfig) webhooks.Register {
+	return &register{
+		RegisterConfig: cfg,
+	}
+}
+
+func (r *register) GetWebhooks() ([]admissionregv1.MutatingWebhook, []admissionregv1.ValidatingWebhook) {
+	rule := flomeshadmission.NewRule(
+		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
+		[]string{"networking.k8s.io"},
+		[]string{"v1"},
+		[]string{"ingresses"},
+	)
+
+	return []admissionregv1.MutatingWebhook{flomeshadmission.NewMutatingWebhook(
+			"mingress.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.IngressMutatingWebhookPath,
+			r.CaBundle,
+			nil,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}, []admissionregv1.ValidatingWebhook{flomeshadmission.NewValidatingWebhook(
+			"vingress.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.IngressValidatingWebhookPath,
+			r.CaBundle,
+			nil,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}
+}
+
+func (r *register) GetHandlers() map[string]http.Handler {
+	return map[string]http.Handler{
+		commons.IngressMutatingWebhookPath:   webhooks.DefaultingWebhookFor(newDefaulter(r.K8sAPI)),
+		commons.IngressValidatingWebhookPath: webhooks.ValidatingWebhookFor(newValidator(r.K8sAPI)),
+	}
+}
+
+type defaulter struct {
 	k8sAPI *kube.K8sAPI
 }
 
-func NewDefaulter(k8sAPI *kube.K8sAPI) *IngressDefaulter {
-	return &IngressDefaulter{
+func newDefaulter(k8sAPI *kube.K8sAPI) *defaulter {
+	return &defaulter{
 		k8sAPI: k8sAPI,
 	}
 }
 
-func (w *IngressDefaulter) RuntimeObject() runtime.Object {
+func (w *defaulter) RuntimeObject() runtime.Object {
 	return &networkingv1.Ingress{}
 }
 
-func (w *IngressDefaulter) SetDefaults(obj interface{}) {
+func (w *defaulter) SetDefaults(obj interface{}) {
 	ing, ok := obj.(*networkingv1.Ingress)
 	if !ok {
 		return
@@ -100,33 +102,33 @@ func (w *IngressDefaulter) SetDefaults(obj interface{}) {
 
 }
 
-type IngressValidator struct {
+type validator struct {
 	k8sAPI *kube.K8sAPI
 }
 
-func (w *IngressValidator) RuntimeObject() runtime.Object {
+func (w *validator) RuntimeObject() runtime.Object {
 	return &networkingv1.Ingress{}
 }
 
-func (w *IngressValidator) ValidateCreate(obj interface{}) error {
+func (w *validator) ValidateCreate(obj interface{}) error {
 	return w.doValidation(obj)
 }
 
-func (w *IngressValidator) ValidateUpdate(oldObj, obj interface{}) error {
+func (w *validator) ValidateUpdate(oldObj, obj interface{}) error {
 	return w.doValidation(obj)
 }
 
-func (w *IngressValidator) ValidateDelete(obj interface{}) error {
+func (w *validator) ValidateDelete(obj interface{}) error {
 	return nil
 }
 
-func NewValidator(k8sAPI *kube.K8sAPI) *IngressValidator {
-	return &IngressValidator{
+func newValidator(k8sAPI *kube.K8sAPI) *validator {
+	return &validator{
 		k8sAPI: k8sAPI,
 	}
 }
 
-func (w *IngressValidator) doValidation(obj interface{}) error {
+func (w *validator) doValidation(obj interface{}) error {
 	ing, ok := obj.(*networkingv1.Ingress)
 	if !ok {
 		return nil
@@ -163,7 +165,7 @@ func (w *IngressValidator) doValidation(obj interface{}) error {
 	return nil
 }
 
-func (w *IngressValidator) secretExists(secretName string, ing *networkingv1.Ingress) error {
+func (w *validator) secretExists(secretName string, ing *networkingv1.Ingress) error {
 	ns, name, err := util.SecretNamespaceAndName(secretName, ing)
 	if err != nil {
 		return err

@@ -23,6 +23,7 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks"
 	"github.com/pkg/errors"
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -30,69 +31,70 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/pointer"
+	"net/http"
 )
 
-const (
-	kind      = "NamespacedIngress"
-	groups    = "flomesh.io"
-	resources = "namespacedingresses"
-	versions  = "v1alpha1"
-
-	mwPath = commons.NamespacedIngressMutatingWebhookPath
-	mwName = "mnamespacedingress.kb.flomesh.io"
-	vwPath = commons.NamespacedIngressValidatingWebhookPath
-	vwName = "vnamespacedingress.kb.flomesh.io"
-)
-
-func RegisterWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
-	rule := flomeshadmission.NewRule(
-		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
-		[]string{groups},
-		[]string{versions},
-		[]string{resources},
-	)
-
-	mutatingWebhook := flomeshadmission.NewMutatingWebhook(
-		mwName,
-		webhookSvcNs,
-		webhookSvcName,
-		mwPath,
-		caBundle,
-		nil,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	validatingWebhook := flomeshadmission.NewValidatingWebhook(
-		vwName,
-		webhookSvcNs,
-		webhookSvcName,
-		vwPath,
-		caBundle,
-		nil,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	flomeshadmission.RegisterMutatingWebhook(mwName, mutatingWebhook)
-	flomeshadmission.RegisterValidatingWebhook(vwName, validatingWebhook)
+type register struct {
+	*webhooks.RegisterConfig
 }
 
-type NamespacedIngressDefaulter struct {
+func NewRegister(cfg *webhooks.RegisterConfig) webhooks.Register {
+	return &register{
+		RegisterConfig: cfg,
+	}
+}
+
+func (r *register) GetWebhooks() ([]admissionregv1.MutatingWebhook, []admissionregv1.ValidatingWebhook) {
+	rule := flomeshadmission.NewRule(
+		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
+		[]string{"flomesh.io"},
+		[]string{"v1alpha1"},
+		[]string{"namespacedingresses"},
+	)
+
+	return []admissionregv1.MutatingWebhook{flomeshadmission.NewMutatingWebhook(
+			"mnamespacedingress.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.NamespacedIngressMutatingWebhookPath,
+			r.CaBundle,
+			nil,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}, []admissionregv1.ValidatingWebhook{flomeshadmission.NewValidatingWebhook(
+			"vnamespacedingress.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.NamespacedIngressValidatingWebhookPath,
+			r.CaBundle,
+			nil,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}
+}
+
+func (r *register) GetHandlers() map[string]http.Handler {
+	return map[string]http.Handler{
+		commons.NamespacedIngressMutatingWebhookPath:   webhooks.DefaultingWebhookFor(newDefaulter(r.K8sAPI, r.ConfigStore)),
+		commons.NamespacedIngressValidatingWebhookPath: webhooks.ValidatingWebhookFor(newValidator(r.K8sAPI)),
+	}
+}
+
+type defaulter struct {
 	k8sAPI      *kube.K8sAPI
 	configStore *config.Store
 }
 
-func NewDefaulter(k8sAPI *kube.K8sAPI, configStore *config.Store) *NamespacedIngressDefaulter {
-	return &NamespacedIngressDefaulter{
+func newDefaulter(k8sAPI *kube.K8sAPI, configStore *config.Store) *defaulter {
+	return &defaulter{
 		k8sAPI:      k8sAPI,
 		configStore: configStore,
 	}
 }
 
-func (w *NamespacedIngressDefaulter) RuntimeObject() runtime.Object {
+func (w *defaulter) RuntimeObject() runtime.Object {
 	return &nsigv1alpha1.NamespacedIngress{}
 }
 
-func (w *NamespacedIngressDefaulter) SetDefaults(obj interface{}) {
+func (w *defaulter) SetDefaults(obj interface{}) {
 	c, ok := obj.(*nsigv1alpha1.NamespacedIngress)
 	if !ok {
 		return
@@ -143,15 +145,15 @@ func (w *NamespacedIngressDefaulter) SetDefaults(obj interface{}) {
 	klog.V(4).Infof("After setting default values, spec=%#v", c.Spec)
 }
 
-type NamespacedIngressValidator struct {
+type validator struct {
 	k8sAPI *kube.K8sAPI
 }
 
-func (w *NamespacedIngressValidator) RuntimeObject() runtime.Object {
+func (w *validator) RuntimeObject() runtime.Object {
 	return &nsigv1alpha1.NamespacedIngress{}
 }
 
-func (w *NamespacedIngressValidator) ValidateCreate(obj interface{}) error {
+func (w *validator) ValidateCreate(obj interface{}) error {
 	namespacedingress, ok := obj.(*nsigv1alpha1.NamespacedIngress)
 	if !ok {
 		return nil
@@ -178,7 +180,7 @@ func (w *NamespacedIngressValidator) ValidateCreate(obj interface{}) error {
 	return doValidation(namespacedingress)
 }
 
-func (w *NamespacedIngressValidator) ValidateUpdate(oldObj, obj interface{}) error {
+func (w *validator) ValidateUpdate(oldObj, obj interface{}) error {
 	//oldNamespacedIngress, ok := oldObj.(*nsigv1alpha1.NamespacedIngress)
 	//if !ok {
 	//	return nil
@@ -196,12 +198,12 @@ func (w *NamespacedIngressValidator) ValidateUpdate(oldObj, obj interface{}) err
 	return doValidation(obj)
 }
 
-func (w *NamespacedIngressValidator) ValidateDelete(obj interface{}) error {
+func (w *validator) ValidateDelete(obj interface{}) error {
 	return nil
 }
 
-func NewValidator(k8sAPI *kube.K8sAPI) *NamespacedIngressValidator {
-	return &NamespacedIngressValidator{
+func newValidator(k8sAPI *kube.K8sAPI) *validator {
+	return &validator{
 		k8sAPI: k8sAPI,
 	}
 }

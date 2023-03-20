@@ -23,91 +23,111 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/certificate"
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
-	"github.com/flomesh-io/ErieCanal/pkg/kube"
 	"github.com/flomesh-io/ErieCanal/pkg/webhooks"
-	clusterwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/cluster"
-	cmwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/cm"
-	gatewaywh "github.com/flomesh-io/ErieCanal/pkg/webhooks/gateway"
-	gatewayclasswh "github.com/flomesh-io/ErieCanal/pkg/webhooks/gatewayclass"
-	gtpwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/globaltrafficpolicy"
-	httproutewh "github.com/flomesh-io/ErieCanal/pkg/webhooks/httproute"
-	ingwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/ingress"
-	idwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/namespacedingress"
-	svcexpwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/serviceexport"
-	svcimpwh "github.com/flomesh-io/ErieCanal/pkg/webhooks/serviceimport"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/cluster"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/cm"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/gateway"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/gatewayclass"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/globaltrafficpolicy"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/httproute"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/ingress"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/namespacedingress"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/serviceexport"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks/serviceimport"
 	"io/ioutil"
+	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-func createWebhookConfigurations(k8sApi *kube.K8sAPI, configStore *config.Store, certMgr certificate.Manager) {
-	mc := configStore.MeshConfig.GetConfig()
-	cert, err := issueCertForWebhook(certMgr, mc)
+func (c *ManagerConfig) RegisterWebHooks() error {
+	registers, err := c.webhookRegisters()
+
 	if err != nil {
-		os.Exit(1)
+		return err
 	}
 
-	ns := config.GetErieCanalNamespace()
-	svcName := mc.Webhook.ServiceName
-	caBundle := cert.CA
-	webhooks.RegisterWebhooks(ns, svcName, caBundle)
-	if mc.GatewayApi.Enabled {
-		webhooks.RegisterGatewayApiWebhooks(ns, svcName, caBundle)
+	if err := c.createWebhookConfigurations(registers); err != nil {
+		return err
 	}
+
+	c.registerWebhookHandlers(registers)
+
+	return nil
+}
+
+func (c *ManagerConfig) webhookRegisters() ([]webhooks.Register, error) {
+	mc := c.configStore.MeshConfig.GetConfig()
+
+	cert, err := issueCertForWebhook(c.certificateManager, mc)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := c.registerConfig(mc, cert)
+
+	return c.registers(cfg), nil
+}
+
+func (c *ManagerConfig) createWebhookConfigurations(registers []webhooks.Register) error {
+	mutatingWebhooks, validatingWebhooks := c.webhooks(registers)
 
 	// Mutating
-	mwc := flomeshadmission.NewMutatingWebhookConfiguration()
-	mutating := k8sApi.Client.
-		AdmissionregistrationV1().
-		MutatingWebhookConfigurations()
-	if _, err = mutating.Create(context.Background(), mwc, metav1.CreateOptions{}); err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			existingMwc, err := mutating.Get(context.Background(), mwc.Name, metav1.GetOptions{})
-			if err != nil {
-				klog.Errorf("Unable to get MutatingWebhookConfigurations %q, %s", mwc.Name, err.Error())
-				os.Exit(1)
-			}
+	if mwc := flomeshadmission.NewMutatingWebhookConfiguration(mutatingWebhooks); mwc != nil {
+		mutating := c.k8sAPI.Client.
+			AdmissionregistrationV1().
+			MutatingWebhookConfigurations()
+		if _, err := mutating.Create(context.Background(), mwc, metav1.CreateOptions{}); err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				existingMwc, err := mutating.Get(context.Background(), mwc.Name, metav1.GetOptions{})
+				if err != nil {
+					klog.Errorf("Unable to get MutatingWebhookConfigurations %q, %s", mwc.Name, err.Error())
+					return err
+				}
 
-			existingMwc.Webhooks = mwc.Webhooks
-			_, err = mutating.Update(context.Background(), existingMwc, metav1.UpdateOptions{})
-			if err != nil {
-				// Should be not conflict for a leader-election manager, error is error
-				klog.Errorf("Unable to update MutatingWebhookConfigurations %q, %s", mwc.Name, err.Error())
-				os.Exit(1)
+				existingMwc.Webhooks = mwc.Webhooks
+				_, err = mutating.Update(context.Background(), existingMwc, metav1.UpdateOptions{})
+				if err != nil {
+					// Should be not conflict for a leader-election manager, error is error
+					klog.Errorf("Unable to update MutatingWebhookConfigurations %q, %s", mwc.Name, err.Error())
+					return err
+				}
+			} else {
+				klog.Errorf("Unable to create MutatingWebhookConfigurations %q, %s", mwc.Name, err.Error())
+				return err
 			}
-		} else {
-			klog.Errorf("Unable to create MutatingWebhookConfigurations %q, %s", mwc.Name, err.Error())
-			os.Exit(1)
 		}
 	}
 
 	// Validating
-	vmc := flomeshadmission.NewValidatingWebhookConfiguration()
-	validating := k8sApi.Client.
-		AdmissionregistrationV1().
-		ValidatingWebhookConfigurations()
-	if _, err = validating.Create(context.Background(), vmc, metav1.CreateOptions{}); err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			existingVmc, err := validating.Get(context.Background(), vmc.Name, metav1.GetOptions{})
-			if err != nil {
-				klog.Errorf("Unable to get ValidatingWebhookConfigurations %q, %s", mwc.Name, err.Error())
-				os.Exit(1)
-			}
+	if vwc := flomeshadmission.NewValidatingWebhookConfiguration(validatingWebhooks); vwc != nil {
+		validating := c.k8sAPI.Client.
+			AdmissionregistrationV1().
+			ValidatingWebhookConfigurations()
+		if _, err := validating.Create(context.Background(), vwc, metav1.CreateOptions{}); err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				existingVmc, err := validating.Get(context.Background(), vwc.Name, metav1.GetOptions{})
+				if err != nil {
+					klog.Errorf("Unable to get ValidatingWebhookConfigurations %q, %s", vwc.Name, err.Error())
+					return err
+				}
 
-			existingVmc.Webhooks = vmc.Webhooks
-			_, err = validating.Update(context.Background(), existingVmc, metav1.UpdateOptions{})
-			if err != nil {
-				klog.Errorf("Unable to update ValidatingWebhookConfigurations %q, %s", vmc.Name, err.Error())
-				os.Exit(1)
+				existingVmc.Webhooks = vwc.Webhooks
+				_, err = validating.Update(context.Background(), existingVmc, metav1.UpdateOptions{})
+				if err != nil {
+					klog.Errorf("Unable to update ValidatingWebhookConfigurations %q, %s", vwc.Name, err.Error())
+					return err
+				}
+			} else {
+				klog.Errorf("Unable to create ValidatingWebhookConfigurations %q, %s", vwc.Name, err.Error())
+				return err
 			}
-		} else {
-			klog.Errorf("Unable to create ValidatingWebhookConfigurations %q, %s", vmc.Name, err.Error())
-			os.Exit(1)
 		}
 	}
+
+	return nil
 }
 
 func issueCertForWebhook(certMgr certificate.Manager, mc *config.MeshConfig) (*certificate.Certificate, error) {
@@ -152,96 +172,68 @@ func issueCertForWebhook(certMgr certificate.Manager, mc *config.MeshConfig) (*c
 	return cert, nil
 }
 
-func registerToWebhookServer(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConfigStore *config.Store) {
-	hookServer := mgr.GetWebhookServer()
-	mc := controlPlaneConfigStore.MeshConfig.GetConfig()
+func (c *ManagerConfig) webhooks(registers []webhooks.Register) (mutating []admissionregv1.MutatingWebhook, validating []admissionregv1.ValidatingWebhook) {
+	for _, r := range registers {
+		m, v := r.GetWebhooks()
 
-	// Cluster
-	hookServer.Register(commons.ClusterMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(clusterwh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.ClusterValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(clusterwh.NewValidator(api)),
-	)
+		if len(m) > 0 {
+			mutating = append(mutating, m...)
+		}
 
-	// NamespacedIngress
-	hookServer.Register(commons.NamespacedIngressMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(idwh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.NamespacedIngressValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(idwh.NewValidator(api)),
-	)
+		if len(v) > 0 {
+			validating = append(validating, v...)
+		}
+	}
 
-	// ServiceExport
-	hookServer.Register(commons.ServiceExportMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(svcexpwh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.ServiceExportValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(svcexpwh.NewValidator(api)),
-	)
+	return mutating, validating
+}
 
-	// ServiceImport
-	hookServer.Register(commons.ServiceImportMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(svcimpwh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.ServiceImportValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(svcimpwh.NewValidator(api)),
-	)
+func (c *ManagerConfig) registerWebhookHandlers(registers []webhooks.Register) {
+	hookServer := c.manager.GetWebhookServer()
 
-	// GlobalTrafficPolicy
-	hookServer.Register(commons.GlobalTrafficPolicyMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(gtpwh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.GlobalTrafficPolicyValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(gtpwh.NewValidator(api)),
-	)
-
-	// core ConfigMap
-	hookServer.Register(commons.ConfigMapMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(cmwh.NewDefaulter(api)),
-	)
-	hookServer.Register(commons.ConfigMapValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(cmwh.NewValidator(api)),
-	)
-
-	// networking v1 Ingress
-	hookServer.Register(commons.IngressMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(ingwh.NewDefaulter(api)),
-	)
-	hookServer.Register(commons.IngressValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(ingwh.NewValidator(api)),
-	)
-
-	// Gateway API
-	if mc.GatewayApi.Enabled {
-		registerGatewayApiToWebhookServer(mgr, api, controlPlaneConfigStore)
+	for _, r := range registers {
+		for path, handler := range r.GetHandlers() {
+			hookServer.Register(path, handler)
+		}
 	}
 }
 
-func registerGatewayApiToWebhookServer(mgr manager.Manager, api *kube.K8sAPI, controlPlaneConfigStore *config.Store) {
-	hookServer := mgr.GetWebhookServer()
+func (c *ManagerConfig) registers(cfg *webhooks.RegisterConfig) []webhooks.Register {
+	mc := c.configStore.MeshConfig.GetConfig()
+	registers := make([]webhooks.Register, 0)
 
-	// Gateway
-	hookServer.Register(commons.GatewayMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(gatewaywh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.GatewayValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(gatewaywh.NewValidator(api)),
-	)
+	registers = append(registers, cluster.NewRegister(cfg))
+	registers = append(registers, cm.NewRegister(cfg))
+	registers = append(registers, serviceexport.NewRegister(cfg))
+	registers = append(registers, serviceimport.NewRegister(cfg))
+	registers = append(registers, globaltrafficpolicy.NewRegister(cfg))
 
-	// GatewayClass
-	hookServer.Register(commons.GatewayClassMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(gatewayclasswh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.GatewayClassValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(gatewayclasswh.NewValidator(api)),
-	)
+	if mc.IsIngressEnabled() {
+		registers = append(registers, ingress.NewRegister(cfg))
+		if mc.IsNamespacedIngressEnabled() {
+			registers = append(registers, namespacedingress.NewRegister(cfg))
+		}
+	}
 
-	// HTTPRoute
-	hookServer.Register(commons.HTTPRouteMutatingWebhookPath,
-		webhooks.DefaultingWebhookFor(httproutewh.NewDefaulter(api, controlPlaneConfigStore)),
-	)
-	hookServer.Register(commons.HTTPRouteValidatingWebhookPath,
-		webhooks.ValidatingWebhookFor(httproutewh.NewValidator(api)),
-	)
+	if mc.IsGatewayApiEnabled() {
+		registers = append(registers, gateway.NewRegister(cfg))
+		registers = append(registers, gatewayclass.NewRegister(cfg))
+		registers = append(registers, httproute.NewRegister(cfg))
+	}
+
+	return registers
+}
+
+func (c *ManagerConfig) registerConfig(mc *config.MeshConfig, cert *certificate.Certificate) *webhooks.RegisterConfig {
+	return &webhooks.RegisterConfig{
+		Manager:            c.manager,
+		ConfigStore:        c.configStore,
+		K8sAPI:             c.k8sAPI,
+		CertificateManager: c.certificateManager,
+		RepoClient:         c.repoClient,
+		Broker:             c.broker,
+		WebhookSvcNs:       config.GetErieCanalNamespace(),
+		WebhookSvcName:     mc.Webhook.ServiceName,
+		CaBundle:           cert.CA,
+	}
 }

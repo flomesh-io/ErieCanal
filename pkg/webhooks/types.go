@@ -16,7 +16,17 @@
 
 package webhooks
 
-import "k8s.io/apimachinery/pkg/runtime"
+import (
+	"github.com/flomesh-io/ErieCanal/pkg/certificate"
+	"github.com/flomesh-io/ErieCanal/pkg/config"
+	"github.com/flomesh-io/ErieCanal/pkg/kube"
+	mcsevent "github.com/flomesh-io/ErieCanal/pkg/mcs/event"
+	"github.com/flomesh-io/ErieCanal/pkg/repo"
+	admissionregv1 "k8s.io/api/admissionregistration/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"net/http"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+)
 
 type WebhookObject interface {
 	RuntimeObject() runtime.Object
@@ -32,4 +42,21 @@ type Validator interface {
 	ValidateCreate(obj interface{}) error
 	ValidateUpdate(oldObj, obj interface{}) error
 	ValidateDelete(obj interface{}) error
+}
+
+type Register interface {
+	GetWebhooks() ([]admissionregv1.MutatingWebhook, []admissionregv1.ValidatingWebhook)
+	GetHandlers() map[string]http.Handler
+}
+
+type RegisterConfig struct {
+	Manager            manager.Manager
+	ConfigStore        *config.Store
+	K8sAPI             *kube.K8sAPI
+	CertificateManager certificate.Manager
+	RepoClient         *repo.PipyRepoClient
+	Broker             *mcsevent.Broker
+	WebhookSvcNs       string
+	WebhookSvcName     string
+	CaBundle           []byte
 }

@@ -18,6 +18,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/flomesh-io/ErieCanal/pkg/commons"
+	"github.com/flomesh-io/ErieCanal/pkg/config"
 	"github.com/flomesh-io/ErieCanal/pkg/repo"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -32,10 +34,11 @@ const (
 	ScriptsRoot = "/repo/scripts"
 )
 
-func initRepo(repoClient *repo.PipyRepoClient) {
+func (c *ManagerConfig) InitRepo() error {
+
 	// wait until pipy repo is up or timeout after 5 minutes
 	if err := wait.PollImmediate(5*time.Second, 60*5*time.Second, func() (bool, error) {
-		if repoClient.IsRepoUp() {
+		if c.repoClient.IsRepoUp() {
 			klog.V(2).Info("Repo is READY!")
 			return true, nil
 		}
@@ -44,21 +47,65 @@ func initRepo(repoClient *repo.PipyRepoClient) {
 		return false, nil
 	}); err != nil {
 		klog.Errorf("Error happened while waiting for repo up, %s", err)
-		os.Exit(1)
+		return err
 	}
 
+	mc := c.configStore.MeshConfig.GetConfig()
 	// initialize the repo
-	if err := repoClient.Batch([]repo.Batch{ingressBatch(), servicesBatch()}); err != nil {
-		os.Exit(1)
+	if err := c.repoClient.Batch(getBatches(mc)); err != nil {
+		return err
 	}
+
+	// derive codebase
+	// Services
+	defaultServicesPath := mc.GetDefaultServicesPath()
+	if err := c.repoClient.DeriveCodebase(defaultServicesPath, commons.DefaultServiceBasePath); err != nil {
+		return err
+	}
+
+	// Ingress
+	if mc.IsIngressEnabled() {
+		defaultIngressPath := mc.GetDefaultIngressPath()
+		if err := c.repoClient.DeriveCodebase(defaultIngressPath, commons.DefaultIngressBasePath); err != nil {
+			return err
+		}
+	}
+
+	// GatewayAPI
+	if mc.IsGatewayApiEnabled() {
+		defaultGatewaysPath := mc.GetDefaultGatewaysPath()
+		if err := c.repoClient.DeriveCodebase(defaultGatewaysPath, commons.DefaultGatewayBasePath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getBatches(mc *config.MeshConfig) []repo.Batch {
+	batches := []repo.Batch{servicesBatch()}
+
+	if mc.IsIngressEnabled() {
+		batches = append(batches, ingressBatch())
+	}
+
+	if mc.IsGatewayApiEnabled() {
+		batches = append(batches, gatewaysBatch())
+	}
+
+	return batches
 }
 
 func ingressBatch() repo.Batch {
-	return createBatch("/base/ingress", fmt.Sprintf("%s/ingress", ScriptsRoot))
+	return createBatch(commons.DefaultIngressBasePath, fmt.Sprintf("%s/ingress", ScriptsRoot))
 }
 
 func servicesBatch() repo.Batch {
-	return createBatch("/base/services", fmt.Sprintf("%s/services", ScriptsRoot))
+	return createBatch(commons.DefaultServiceBasePath, fmt.Sprintf("%s/services", ScriptsRoot))
+}
+
+func gatewaysBatch() repo.Batch {
+	return createBatch(commons.DefaultGatewayBasePath, fmt.Sprintf("%s/gateways", ScriptsRoot))
 }
 
 func createBatch(repoPath, scriptsDir string) repo.Batch {

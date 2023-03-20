@@ -19,12 +19,13 @@ package main
 import (
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
-	"github.com/flomesh-io/ErieCanal/pkg/repo"
-	"os"
 )
 
-func setupHTTP(repoClient *repo.PipyRepoClient, mc *config.MeshConfig) {
-	if err := config.UpdateIngressHTTPConfig(commons.DefaultIngressBasePath, repoClient, mc); err != nil {
-		os.Exit(1)
+func (c *ManagerConfig) SetupHTTP() error {
+	mc := c.configStore.MeshConfig.GetConfig()
+	if err := config.UpdateIngressHTTPConfig(commons.DefaultIngressBasePath, c.repoClient, mc); err != nil {
+		return err
 	}
+
+	return nil
 }

@@ -23,32 +23,32 @@ import (
 	"github.com/flomesh-io/ErieCanal/pkg/commons"
 	"github.com/flomesh-io/ErieCanal/pkg/config"
 	"github.com/flomesh-io/ErieCanal/pkg/kube"
+	"github.com/flomesh-io/ErieCanal/pkg/webhooks"
 	admissionregv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
+	"net/http"
 	"strings"
 )
 
-const (
-	kind      = "ConfigMap"
-	groups    = ""
-	resources = "configmaps"
-	versions  = "v1"
+type register struct {
+	*webhooks.RegisterConfig
+}
 
-	mwPath = commons.ConfigMapMutatingWebhookPath
-	mwName = "mconfigmap.kb.flomesh.io"
-	vwPath = commons.ConfigMapValidatingWebhookPath
-	vwName = "vconfigmap.kb.flomesh.io"
-)
+func NewRegister(cfg *webhooks.RegisterConfig) webhooks.Register {
+	return &register{
+		RegisterConfig: cfg,
+	}
+}
 
-func RegisterWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
+func (r *register) GetWebhooks() ([]admissionregv1.MutatingWebhook, []admissionregv1.ValidatingWebhook) {
 	rule := flomeshadmission.NewRule(
 		[]admissionregv1.OperationType{admissionregv1.Create, admissionregv1.Update},
-		[]string{groups},
-		[]string{versions},
-		[]string{resources},
+		[]string{""},
+		[]string{"v1"},
+		[]string{"configmaps"},
 	)
 
 	nsSelector := &metav1.LabelSelector{
@@ -57,50 +57,52 @@ func RegisterWebhooks(webhookSvcNs, webhookSvcName string, caBundle []byte) {
 		},
 	}
 
-	mutatingWebhook := flomeshadmission.NewMutatingWebhook(
-		mwName,
-		webhookSvcNs,
-		webhookSvcName,
-		mwPath,
-		caBundle,
-		nsSelector,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	validatingWebhook := flomeshadmission.NewValidatingWebhook(
-		vwName,
-		webhookSvcNs,
-		webhookSvcName,
-		vwPath,
-		caBundle,
-		nsSelector,
-		[]admissionregv1.RuleWithOperations{rule},
-	)
-
-	flomeshadmission.RegisterMutatingWebhook(mwName, mutatingWebhook)
-	flomeshadmission.RegisterValidatingWebhook(vwName, validatingWebhook)
+	return []admissionregv1.MutatingWebhook{flomeshadmission.NewMutatingWebhook(
+			"mconfigmap.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.ConfigMapMutatingWebhookPath,
+			r.CaBundle,
+			nsSelector,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}, []admissionregv1.ValidatingWebhook{flomeshadmission.NewValidatingWebhook(
+			"vconfigmap.kb.flomesh.io",
+			r.WebhookSvcNs,
+			r.WebhookSvcName,
+			commons.ConfigMapValidatingWebhookPath,
+			r.CaBundle,
+			nsSelector,
+			[]admissionregv1.RuleWithOperations{rule},
+		)}
 }
 
-type ConfigMapDefaulter struct {
+func (r *register) GetHandlers() map[string]http.Handler {
+	return map[string]http.Handler{
+		commons.ConfigMapMutatingWebhookPath:   webhooks.DefaultingWebhookFor(newDefaulter(r.K8sAPI)),
+		commons.ConfigMapValidatingWebhookPath: webhooks.ValidatingWebhookFor(newValidator(r.K8sAPI)),
+	}
+}
+
+type defaulter struct {
 	k8sAPI *kube.K8sAPI
 }
 
-func isNotWatchedConfigmap(cm *corev1.ConfigMap, erieCanalNamespace string) bool {
+func isNotWatchedConfigmap(cm *corev1.ConfigMap, ecNamespace string) bool {
 	klog.V(5).Infof("Configmap namespace = %q, name = %q.", cm.Namespace, cm.Name)
-	return cm.Namespace != erieCanalNamespace || !config.DefaultWatchedConfigMaps.Has(cm.Name)
+	return cm.Namespace != ecNamespace || !config.DefaultWatchedConfigMaps.Has(cm.Name)
 }
 
-func NewDefaulter(k8sAPI *kube.K8sAPI) *ConfigMapDefaulter {
-	return &ConfigMapDefaulter{
+func newDefaulter(k8sAPI *kube.K8sAPI) *defaulter {
+	return &defaulter{
 		k8sAPI: k8sAPI,
 	}
 }
 
-func (w *ConfigMapDefaulter) RuntimeObject() runtime.Object {
+func (w *defaulter) RuntimeObject() runtime.Object {
 	return &corev1.ConfigMap{}
 }
 
-func (w *ConfigMapDefaulter) SetDefaults(obj interface{}) {
+func (w *defaulter) SetDefaults(obj interface{}) {
 	cm, ok := obj.(*corev1.ConfigMap)
 	if !ok {
 		return
@@ -114,7 +116,6 @@ func (w *ConfigMapDefaulter) SetDefaults(obj interface{}) {
 	case commons.MeshConfigName:
 		cfg, err := config.ParseMeshConfig(cm)
 		if err != nil {
-			klog.Errorf("Failed to unmarshall mesh-config to MeshConfig: %s", err)
 			return
 		}
 
@@ -152,23 +153,23 @@ func (w *ConfigMapDefaulter) SetDefaults(obj interface{}) {
 	}
 }
 
-type ConfigMapValidator struct {
+type validator struct {
 	k8sAPI *kube.K8sAPI
 }
 
-func (w *ConfigMapValidator) RuntimeObject() runtime.Object {
+func (w *validator) RuntimeObject() runtime.Object {
 	return &corev1.ConfigMap{}
 }
 
-func (w *ConfigMapValidator) ValidateCreate(obj interface{}) error {
+func (w *validator) ValidateCreate(obj interface{}) error {
 	return w.doValidation(obj)
 }
 
-func (w *ConfigMapValidator) ValidateUpdate(oldObj, obj interface{}) error {
+func (w *validator) ValidateUpdate(oldObj, obj interface{}) error {
 	return w.doValidation(obj)
 }
 
-func (w *ConfigMapValidator) ValidateDelete(obj interface{}) error {
+func (w *validator) ValidateDelete(obj interface{}) error {
 	cm, ok := obj.(*corev1.ConfigMap)
 	if !ok {
 		return nil
@@ -189,13 +190,13 @@ func (w *ConfigMapValidator) ValidateDelete(obj interface{}) error {
 	return nil
 }
 
-func NewValidator(k8sAPI *kube.K8sAPI) *ConfigMapValidator {
-	return &ConfigMapValidator{
+func newValidator(k8sAPI *kube.K8sAPI) *validator {
+	return &validator{
 		k8sAPI: k8sAPI,
 	}
 }
 
-func (w *ConfigMapValidator) doValidation(obj interface{}) error {
+func (w *validator) doValidation(obj interface{}) error {
 	cm, ok := obj.(*corev1.ConfigMap)
 	if !ok {
 		return nil
@@ -208,16 +209,6 @@ func (w *ConfigMapValidator) doValidation(obj interface{}) error {
 	switch cm.Name {
 	case commons.MeshConfigName:
 		// validate the config
-		cfg, err := config.ParseMeshConfig(cm)
-		if err != nil {
-			return err
-		}
-
-		if cfg.Ingress.Enabled {
-			if !cfg.Ingress.HTTP.Enabled && !cfg.Ingress.TLS.Enabled {
-				return fmt.Errorf("ingress.http.enabled and ingress.tls.enabled are both false, at least one should be enabled")
-			}
-		}
 	default:
 		// ignore
 	}

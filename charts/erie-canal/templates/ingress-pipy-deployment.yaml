@@ -1,4 +1,4 @@
-{{- if and .Values.ec.ingress.enabled (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- if and .Values.ec.ingress.enabled (not .Values.ec.gatewayApi.enabled ) (semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion) }}
 {{- if and (not .Values.ec.ingress.namespaced) (or .Values.ec.ingress.http.enabled .Values.ec.ingress.tls.enabled) }}
 apiVersion: apps/v1
 kind: Deployment

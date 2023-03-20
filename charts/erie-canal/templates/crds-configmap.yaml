@@ -12,11 +12,11 @@ data:
 {{ (.Files.Get "apis/flomesh.io_proxyprofiles.yaml") | indent 4 }}
   flomesh.io_mcs-api.yaml: |
 {{ (.Files.Get "apis/flomesh.io_mcs-api.yaml") | indent 4 }}
-  {{- if .Values.ec.gatewayApi.enabled }}
+  {{- if and .Values.ec.gatewayApi.enabled (not .Values.ec.ingress.enabled )}}
   gateway-api.yaml: |
 {{ (.Files.Get "apis/gateway-api.yaml") | indent 4 }}
   {{- end }}
-  {{- if .Values.ec.ingress.namespaced }}
+  {{- if and .Values.ec.ingress.enabled .Values.ec.ingress.namespaced (not .Values.ec.gatewayApi.enabled) }}
   flomesh.io_namespacedingresses.yaml: |
 {{ (.Files.Get "apis/flomesh.io_namespacedingresses.yaml") | indent 4 }}
   {{- end }}

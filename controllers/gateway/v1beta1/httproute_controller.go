@@ -1,44 +1,67 @@
 /*
- * Copyright 2022 The flomesh.io Authors.
+ * MIT License
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) since 2021,  flomesh.io Authors.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package v1beta1
 
 import (
 	"context"
-	"github.com/flomesh-io/ErieCanal/pkg/kube"
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/flomesh-io/ErieCanal/controllers"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	gwv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
-type HTTPRouteReconciler struct {
-	client.Client
-	K8sAPI   *kube.K8sAPI
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
+type httpRouteReconciler struct {
+	recorder record.EventRecorder
+	cfg      *controllers.ReconcilerConfig
 }
 
-func (r *HTTPRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func NewHTTPRouteReconciler(rc *controllers.ReconcilerConfig) controllers.Reconciler {
+	return &httpRouteReconciler{
+		recorder: rc.Manager.GetEventRecorderFor("HTTPRoute"),
+		cfg:      rc,
+	}
+}
+
+func (r *httpRouteReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	// Fetch the HTTPRoute from the cache.
+	httpRoute := &gwv1beta1.HTTPRoute{}
+	err := r.cfg.Client.Get(ctx, req.NamespacedName, httpRoute)
+	if errors.IsNotFound(err) {
+		// TODO: notify HTTPRoute Deletion
+		return reconcile.Result{}, nil
+	}
+
+	// TODO: HTTPRoute is added or updated, trigger
+
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *HTTPRouteReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *httpRouteReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gwv1beta1.HTTPRoute{}).
 		Complete(r)

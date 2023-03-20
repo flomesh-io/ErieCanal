@@ -26,7 +26,7 @@ data:
       },
 
       "ingress": {
-        "enabled": {{ .Values.ec.ingress.enabled }},
+        "enabled": {{ and .Values.ec.ingress.enabled (not .Values.ec.gatewayApi.enabled )}},
         "namespaced": {{ .Values.ec.ingress.namespaced }},
         "http": {
           "enabled": {{ .Values.ec.ingress.http.enabled }},
@@ -48,7 +48,7 @@ data:
       },
 
       "gatewayApi": {
-        "enabled": {{ .Values.ec.gatewayApi.enabled }}
+        "enabled": {{ and .Values.ec.gatewayApi.enabled (not .Values.ec.ingress.enabled) }}
       },
 
       "certificate": {
@@ -72,5 +72,9 @@ data:
 
       "serviceLB": {
         "enabled": {{ .Values.ec.serviceLB.enabled }}
+      },
+
+      "featuresGate": {
+        "createServiceAndEndpointSlicesForMCS": {{ .Values.ec.featuresGate.createEndpointSliceForMCS }}
       }
     }

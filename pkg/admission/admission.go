@@ -22,27 +22,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var (
-	mutatingWebhooks   = make(map[string]admissionregv1.MutatingWebhook)
-	validatingWebhooks = make(map[string]admissionregv1.ValidatingWebhook)
-)
-
-func RegisterMutatingWebhook(name string, webhook admissionregv1.MutatingWebhook) {
-	mutatingWebhooks[name] = webhook
-}
-
-func RegisterValidatingWebhook(name string, webhook admissionregv1.ValidatingWebhook) {
-	validatingWebhooks[name] = webhook
-}
-
-func NewMutatingWebhookConfiguration() *admissionregv1.MutatingWebhookConfiguration {
-	if len(mutatingWebhooks) == 0 {
+func NewMutatingWebhookConfiguration(webhooks []admissionregv1.MutatingWebhook) *admissionregv1.MutatingWebhookConfiguration {
+	if len(webhooks) == 0 {
 		return nil
-	}
-
-	var webhooks []admissionregv1.MutatingWebhook
-	for _, w := range mutatingWebhooks {
-		webhooks = append(webhooks, w)
 	}
 
 	return &admissionregv1.MutatingWebhookConfiguration{
@@ -53,14 +35,9 @@ func NewMutatingWebhookConfiguration() *admissionregv1.MutatingWebhookConfigurat
 	}
 }
 
-func NewValidatingWebhookConfiguration() *admissionregv1.ValidatingWebhookConfiguration {
-	if len(mutatingWebhooks) == 0 {
+func NewValidatingWebhookConfiguration(webhooks []admissionregv1.ValidatingWebhook) *admissionregv1.ValidatingWebhookConfiguration {
+	if len(webhooks) == 0 {
 		return nil
-	}
-
-	var webhooks []admissionregv1.ValidatingWebhook
-	for _, w := range validatingWebhooks {
-		webhooks = append(webhooks, w)
 	}
 
 	return &admissionregv1.ValidatingWebhookConfiguration{

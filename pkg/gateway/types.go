@@ -16,4 +16,7 @@
 
 package gateway
 
-//import "sigs.k8s.io/gateway-api/apis/v1alpha2"
+type Cache interface {
+	Insert(obj interface{}) bool
+	Delete(obj interface{}) bool
+}

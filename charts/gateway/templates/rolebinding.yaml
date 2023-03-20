@@ -1,0 +1,2 @@
+{{- if and .Values.ec.ingress.enabled (not .Values.ec.gatewayApi.enabled ) (semverCompare ">=1.21-0" .Capabilities.KubeVersion.GitVersion) }}
+{{- end }}
