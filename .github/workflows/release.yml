@@ -50,7 +50,7 @@ jobs:
 
     - name: Build and Push - ${{ matrix.id }}
       id: docker_build_push
-      uses: docker/build-push-action@v4.0.0
+      uses: docker/build-push-action@v4.1.1
       with:
         context: .
         file: ./dockerfiles/${{ matrix.id }}/Dockerfile
