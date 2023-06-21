@@ -65,7 +65,7 @@ jobs:
 
     - name: Docker meta - ${{ matrix.id }}
       id: docker_meta
-      uses: crazy-max/ghaction-docker-meta@v4.4.0
+      uses: crazy-max/ghaction-docker-meta@v4.6.0
       with:
         images: flomesh/erie-canal-${{ matrix.id }}
         tags: |
