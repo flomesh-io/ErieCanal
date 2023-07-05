@@ -543,8 +543,8 @@ github.com/prometheus/procfs v0.8.0 h1:ODq8ZFEaYeCaZOJlZZdJA2AbQR98dSHSM1KW/You5
 github.com/prometheus/procfs v0.8.0/go.mod h1:z7EfXMXOkbkqb9IINtpCn86r/to3BnA0uaxHdg830/4=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=
+github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
 github.com/rubenv/sql-migrate v1.2.0 h1:fOXMPLMd41sK7Tg75SXDec15k3zg5WNV6SjuDRiNfcU=
 github.com/rubenv/sql-migrate v1.2.0/go.mod h1:Z5uVnq7vrIrPmHbVFfR4YLHRZquxeHpckCnRq0P/K9Y=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
@@ -1111,8 +1111,8 @@ k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 h1:+70TFaan3hfJzs+7VK2o+O
 k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280/go.mod h1:+Axhij7bCpeqhklhUTe3xmOn6bWxolyZEeyaFpjGtl4=
 k8s.io/kubectl v0.26.2 h1:SMPB4j48eVFxsYluBq3VLyqXtE6b72YnszkbTAtFye4=
 k8s.io/kubectl v0.26.2/go.mod h1:KYWOXSwp2BrDn3kPeoU/uKzKtdqvhK1dgZGd0+no4cM=
-k8s.io/kubernetes v1.26.2 h1:6Ve0nzlF2noVXf9jMHSJgbRZC0EkyOV22GYEv1K7MZI=
-k8s.io/kubernetes v1.26.2/go.mod h1:cv07eVU5+kF6ibpVtAvOGjIBsrfgevQL4ORK85/oqWc=
+k8s.io/kubernetes v1.26.6 h1:wj7+e03hcuEsrs2sA1YTGAdC+L/U0QVmnRkaCRO0Fh4=
+k8s.io/kubernetes v1.26.6/go.mod h1:baNC1jjusIrvJBaOYmefaoZNklGLvIYfOfScJ25KENw=
 k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 h1:KTgPnR10d5zhztWptI952TNtt/4u5h3IzDXkdIMuo2Y=
 k8s.io/utils v0.0.0-20221128185143-99ec85e7a448/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 oras.land/oras-go v1.2.2 h1:0E9tOHUfrNH7TCDk5KU0jVBEzCqbfdyuVfGmJ7ZeRPE=
