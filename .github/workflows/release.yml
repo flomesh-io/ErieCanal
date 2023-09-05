@@ -29,7 +29,7 @@ jobs:
         password: ${{ secrets.FLOMESH_DOCKERHUB_PASSWORD }}
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -77,7 +77,7 @@ jobs:
     - build_and_push_images
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
